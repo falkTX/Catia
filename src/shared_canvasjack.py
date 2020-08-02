@@ -32,9 +32,6 @@ else:
 # Imports (Custom Stuff)
 
 import patchcanvas
-import jacksettings
-import logs
-import render
 from shared import *
 from jacklib_helpers import *
 
@@ -444,31 +441,6 @@ class AbstractCanvasJackClass(QMainWindow):
         self.ui.b_xruns.setText("%s Xrun%s" % (txt1, txt2))
 
     # -----------------------------------------------------------------
-    # External Dialogs
-
-    @pyqtSlot()
-    def slot_showJackSettings(self):
-        jacksettingsW = jacksettings.JackSettingsW(self)
-        jacksettingsW.exec_()
-        del jacksettingsW
-
-        # Force update of gui widgets
-        if not gJack.client:
-            self.jackStopped()
-
-    @pyqtSlot()
-    def slot_showLogs(self):
-        if self.fLogsW is None:
-            self.fLogsW = logs.LogsW(self)
-        self.fLogsW.show()
-
-    @pyqtSlot()
-    def slot_showRender(self):
-        renderW = render.RenderW(self)
-        renderW.exec_()
-        del renderW
-
-    # -----------------------------------------------------------------
     # Shared Canvas code
 
     @pyqtSlot()
@@ -544,11 +516,7 @@ class AbstractCanvasJackClass(QMainWindow):
     def setJackConnections(self, modes):
         if "jack" in modes:
             self.ui.act_jack_clear_xruns.triggered.connect(self.slot_JackClearXruns)
-            self.ui.act_jack_render.triggered.connect(self.slot_showRender)
-            self.ui.act_jack_configure.triggered.connect(self.slot_showJackSettings)
             self.ui.b_jack_clear_xruns.clicked.connect(self.slot_JackClearXruns)
-            self.ui.b_jack_configure.clicked.connect(self.slot_showJackSettings)
-            self.ui.b_jack_render.clicked.connect(self.slot_showRender)
             self.ui.cb_buffer_size.currentIndexChanged[str].connect(self.slot_jackBufferSize_ComboBox)
             self.ui.cb_sample_rate.currentIndexChanged[str].connect(self.slot_jackSampleRate_ComboBox)
             self.ui.b_xruns.clicked.connect(self.slot_JackClearXruns)
@@ -575,9 +543,3 @@ class AbstractCanvasJackClass(QMainWindow):
             self.ui.b_transport_backwards.clicked.connect(self.slot_transportBackwards)
             self.ui.b_transport_forwards.clicked.connect(self.slot_transportForwards)
             self.ui.label_time.customContextMenuRequested.connect(self.slot_transportViewMenu)
-
-        if "misc" in modes:
-            if LINUX:
-                self.ui.act_show_logs.triggered.connect(self.slot_showLogs)
-            else:
-                self.ui.act_show_logs.setEnabled(False)

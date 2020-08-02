@@ -912,10 +912,6 @@ class CatiaMainW(AbstractCanvasJackClass):
                 self.jackStopped()
                 return False
 
-        canRender = render.canRender()
-
-        self.ui.act_jack_render.setEnabled(canRender)
-        self.ui.b_jack_render.setEnabled(canRender)
         self.menuJackServer(True)
         self.menuJackTransport(True)
 
@@ -968,8 +964,6 @@ class CatiaMainW(AbstractCanvasJackClass):
             self.ui.cb_sample_rate.setEnabled(False)
             self.ui.menu_Jack_Buffer_Size.setEnabled(False)
 
-        self.ui.act_jack_render.setEnabled(False)
-        self.ui.b_jack_render.setEnabled(False)
         self.menuJackServer(False)
         self.menuJackTransport(False)
         self.ui_setXruns(-1)
