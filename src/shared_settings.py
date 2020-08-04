@@ -57,13 +57,6 @@ class SettingsW(QDialog):
         self.fAutoHideGroups  = True
 
         # -------------------------------------------------------------
-        # Set app-specific settings
-
-        self.ui.group_main_paths.setEnabled(False)
-        self.ui.group_main_paths.setVisible(False)
-        self.ui.lw_page.setCurrentCell(TAB_INDEX_MAIN, 0)
-
-        # -------------------------------------------------------------
         # Load settings
 
         self.loadSettings()
@@ -83,7 +76,11 @@ class SettingsW(QDialog):
 
         self.accepted.connect(self.slot_saveSettings)
         self.ui.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.slot_resetSettings)
-        self.ui.b_main_def_folder_open.clicked.connect(self.slot_getAndSetProjectPath)
+
+        # -------------------------------------------------------------
+        # Ready
+
+        self.ui.lw_page.setCurrentCell(TAB_INDEX_MAIN, 0)
 
     def loadSettings(self):
         settings = QSettings()
