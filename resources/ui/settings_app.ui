@@ -74,17 +74,12 @@
        </attribute>
        <row>
         <property name="text">
-         <string>main</string>
+         <string>catia</string>
         </property>
        </row>
        <row>
         <property name="text">
          <string>canvas</string>
-        </property>
-       </row>
-       <row>
-        <property name="text">
-         <string>ladish</string>
         </property>
        </row>
        <column>
@@ -94,7 +89,7 @@
        </column>
        <item row="0" column="0">
         <property name="text">
-         <string>Main</string>
+         <string>Catia</string>
         </property>
         <property name="font">
          <font>
@@ -107,7 +102,7 @@
         </property>
         <property name="icon">
          <iconset resource="../resources.qrc">
-          <normaloff>:/48x48/exec.png</normaloff>:/48x48/exec.png</iconset>
+          <normaloff>:/scalable/catia.svg</normaloff>:/scalable/catia.svg</iconset>
         </property>
         <property name="flags">
          <set>ItemIsSelectable|ItemIsEnabled</set>
@@ -125,25 +120,7 @@
         </property>
         <property name="icon">
          <iconset resource="../resources.qrc">
-          <normaloff>:/48x48/canvas.png</normaloff>:/48x48/canvas.png</iconset>
-        </property>
-        <property name="flags">
-         <set>ItemIsSelectable|ItemIsEnabled</set>
-        </property>
-       </item>
-       <item row="2" column="0">
-        <property name="text">
-         <string>LADISH</string>
-        </property>
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources.qrc">
-          <normaloff>:/48x48/ladish.png</normaloff>:/48x48/ladish.png</iconset>
+          <normaloff>:/scalable/canvas.svg</normaloff>:/scalable/canvas.svg</iconset>
         </property>
         <property name="flags">
          <set>ItemIsSelectable|ItemIsEnabled</set>
@@ -195,7 +172,7 @@
               <string notr="true"/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../resources.qrc">:/48x48/exec.png</pixmap>
+              <pixmap>:/48x48/exec.png</pixmap>
              </property>
              <property name="alignment">
               <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -203,72 +180,6 @@
             </widget>
            </item>
           </layout>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="group_main_paths">
-           <property name="title">
-            <string>Paths</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_3">
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_2">
-              <item>
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Default project folder:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="le_main_def_folder"/>
-              </item>
-              <item>
-               <widget class="QPushButton" name="b_main_def_folder_open">
-                <property name="maximumSize">
-                 <size>
-                  <width>22</width>
-                  <height>22</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="icon">
-                 <iconset resource="../resources.qrc">
-                  <normaloff>:/16x16/document-open.png</normaloff>:/16x16/document-open.png</iconset>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="group_tray">
-           <property name="title">
-            <string>System Tray</string>
-           </property>
-           <layout class="QGridLayout" name="gridLayout_5">
-            <item row="1" column="0">
-             <widget class="QCheckBox" name="cb_tray_close_to">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="text">
-               <string>Close Main Window to System Tray</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QCheckBox" name="cb_tray_enable">
-              <property name="text">
-               <string>Use System Tray (App-Indicator support)</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
          </item>
          <item>
           <widget class="QGroupBox" name="groupBox_3">
@@ -401,7 +312,7 @@
               <string notr="true"/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../resources.qrc">:/48x48/canvas.png</pixmap>
+              <pixmap>:/48x48/canvas.png</pixmap>
              </property>
              <property name="alignment">
               <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -555,142 +466,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="page_ladish">
-        <layout class="QVBoxLayout" name="verticalLayout_10">
-         <property name="margin">
-          <number>2</number>
-         </property>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_11">
-           <item>
-            <widget class="QLabel" name="label_13">
-             <property name="text">
-              <string>&lt;b&gt;LADISH&lt;/b&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_10">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_14">
-             <property name="text">
-              <string notr="true"/>
-             </property>
-             <property name="pixmap">
-              <pixmap resource="../resources.qrc">:/48x48/ladish.png</pixmap>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignHCenter|Qt::AlignTop</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="groupBox_6">
-           <property name="title">
-            <string>Options</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout_6">
-            <item>
-             <widget class="QCheckBox" name="cb_ladish_studio_autostart">
-              <property name="text">
-               <string>Start studio on load</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QCheckBox" name="cb_ladish_notify">
-              <property name="text">
-               <string>Send notifications</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <layout class="QGridLayout" name="gridLayout_3">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_15">
-             <property name="text">
-              <string>Shell to use:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1">
-            <widget class="QLineEdit" name="le_ladish_shell"/>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>Terminal to use:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="le_ladish_terminal"/>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>JS delay:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QSpinBox" name="sb_ladish_jsdelay">
-             <property name="suffix">
-              <string> seconds</string>
-             </property>
-             <property name="prefix">
-              <string/>
-             </property>
-             <property name="maximum">
-              <number>1000</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-        </layout>
-       </widget>
        <widget class="QWidget" name="page"/>
       </widget>
      </item>
@@ -776,22 +551,6 @@
     <hint type="destinationlabel">
      <x>385</x>
      <y>299</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cb_tray_enable</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>cb_tray_close_to</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>295</x>
-     <y>153</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>289</x>
-     <y>175</y>
     </hint>
    </hints>
   </connection>

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Common/Shared code related to the Settings dialog
-# Copyright (C) 2010-2018 Filipe Coelho <falktx@falktx.com>
+# Copyright (C) 2010-2020 Filipe Coelho <falktx@falktx.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,37 +35,11 @@ from patchcanvas_theme import *
 # Tab indexes
 TAB_INDEX_MAIN   = 0
 TAB_INDEX_CANVAS = 1
-TAB_INDEX_LADISH = 2
-TAB_INDEX_NONE   = 3
+TAB_INDEX_NONE   = 2
 
 # PatchCanvas defines
 CANVAS_ANTIALIASING_SMALL = 1
 CANVAS_EYECANDY_SMALL     = 1
-
-# LADISH defines
-LADISH_CONF_KEY_DAEMON_NOTIFY           = "/org/ladish/daemon/notify"
-LADISH_CONF_KEY_DAEMON_SHELL            = "/org/ladish/daemon/shell"
-LADISH_CONF_KEY_DAEMON_TERMINAL         = "/org/ladish/daemon/terminal"
-LADISH_CONF_KEY_DAEMON_STUDIO_AUTOSTART = "/org/ladish/daemon/studio_autostart"
-LADISH_CONF_KEY_DAEMON_JS_SAVE_DELAY    = "/org/ladish/daemon/js_save_delay"
-
-# LADISH defaults
-LADISH_CONF_KEY_DAEMON_NOTIFY_DEFAULT           = True
-LADISH_CONF_KEY_DAEMON_SHELL_DEFAULT            = "sh"
-LADISH_CONF_KEY_DAEMON_TERMINAL_DEFAULT         = "x-terminal-emulator"
-LADISH_CONF_KEY_DAEMON_STUDIO_AUTOSTART_DEFAULT = True
-LADISH_CONF_KEY_DAEMON_JS_SAVE_DELAY_DEFAULT    = 0
-
-# Internal defaults
-global SETTINGS_DEFAULT_PROJECT_FOLDER
-SETTINGS_DEFAULT_PROJECT_FOLDER = HOME
-
-# ------------------------------------------------------------------------------------------------------------
-# Change internal defaults
-
-def setDefaultProjectFolder(folder):
-    global SETTINGS_DEFAULT_PROJECT_FOLDER
-    SETTINGS_DEFAULT_PROJECT_FOLDER = folder
 
 # ------------------------------------------------------------------------------------------------------------
 # Settings Dialog
@@ -81,40 +55,13 @@ class SettingsW(QDialog):
 
         self.fRefreshInterval = 120
         self.fAutoHideGroups  = True
-        self.fUseSystemTray   = True
-        self.fCloseToTray     = False
 
         # -------------------------------------------------------------
         # Set app-specific settings
 
-        if appName == "catarina":
-            self.fAutoHideGroups = False
-            self.ui.lw_page.hideRow(TAB_INDEX_MAIN)
-            self.ui.lw_page.hideRow(TAB_INDEX_LADISH)
-            self.ui.lw_page.setCurrentCell(TAB_INDEX_CANVAS, 0)
-
-        elif appName == "catia":
-            self.fUseSystemTray = False
-            self.ui.group_main_paths.setEnabled(False)
-            self.ui.group_main_paths.setVisible(False)
-            self.ui.group_tray.setEnabled(False)
-            self.ui.group_tray.setVisible(False)
-            self.ui.lw_page.hideRow(TAB_INDEX_LADISH)
-            self.ui.lw_page.setCurrentCell(TAB_INDEX_MAIN, 0)
-
-        elif appName == "claudia":
-            self.ui.cb_jack_port_alias.setEnabled(False)
-            self.ui.cb_jack_port_alias.setVisible(False)
-            self.ui.label_jack_port_alias.setEnabled(False)
-            self.ui.label_jack_port_alias.setVisible(False)
-            self.ui.lw_page.setCurrentCell(TAB_INDEX_MAIN, 0)
-
-        else:
-            self.ui.lw_page.hideRow(TAB_INDEX_MAIN)
-            self.ui.lw_page.hideRow(TAB_INDEX_CANVAS)
-            self.ui.lw_page.hideRow(TAB_INDEX_LADISH)
-            self.ui.stackedWidget.setCurrentIndex(TAB_INDEX_NONE)
-            return
+        self.ui.group_main_paths.setEnabled(False)
+        self.ui.group_main_paths.setVisible(False)
+        self.ui.lw_page.setCurrentCell(TAB_INDEX_MAIN, 0)
 
         # -------------------------------------------------------------
         # Load settings
@@ -142,9 +89,6 @@ class SettingsW(QDialog):
         settings = QSettings()
 
         if not self.ui.lw_page.isRowHidden(TAB_INDEX_MAIN):
-            self.ui.le_main_def_folder.setText(settings.value("Main/DefaultProjectFolder", SETTINGS_DEFAULT_PROJECT_FOLDER, type=str))
-            self.ui.cb_tray_enable.setChecked(settings.value("Main/UseSystemTray", self.fUseSystemTray, type=bool))
-            self.ui.cb_tray_close_to.setChecked(settings.value("Main/CloseToTray", self.fCloseToTray, type=bool))
             self.ui.sb_gui_refresh.setValue(settings.value("Main/RefreshInterval", self.fRefreshInterval, type=int))
             self.ui.cb_jack_port_alias.setCurrentIndex(settings.value("Main/JackPortAlias", 2, type=int))
 
@@ -166,28 +110,12 @@ class SettingsW(QDialog):
                 if thisThemeName == themeName:
                     self.ui.cb_canvas_theme.setCurrentIndex(i)
 
-        # ---------------------------------------
-
-        if not self.ui.lw_page.isRowHidden(TAB_INDEX_LADISH):
-            self.ui.cb_ladish_notify.setChecked(settings.value(LADISH_CONF_KEY_DAEMON_NOTIFY, LADISH_CONF_KEY_DAEMON_NOTIFY_DEFAULT, type=bool))
-            self.ui.le_ladish_shell.setText(settings.value(LADISH_CONF_KEY_DAEMON_SHELL, LADISH_CONF_KEY_DAEMON_SHELL_DEFAULT, type=str))
-            self.ui.le_ladish_terminal.setText(settings.value(LADISH_CONF_KEY_DAEMON_TERMINAL, LADISH_CONF_KEY_DAEMON_TERMINAL_DEFAULT, type=str))
-            self.ui.cb_ladish_studio_autostart.setChecked(settings.value(LADISH_CONF_KEY_DAEMON_STUDIO_AUTOSTART, LADISH_CONF_KEY_DAEMON_STUDIO_AUTOSTART_DEFAULT, type=bool))
-            self.ui.sb_ladish_jsdelay.setValue(settings.value(LADISH_CONF_KEY_DAEMON_JS_SAVE_DELAY, LADISH_CONF_KEY_DAEMON_JS_SAVE_DELAY_DEFAULT, type=int))
-
     @pyqtSlot()
     def slot_saveSettings(self):
         settings = QSettings()
 
         if not self.ui.lw_page.isRowHidden(TAB_INDEX_MAIN):
             settings.setValue("Main/RefreshInterval", self.ui.sb_gui_refresh.value())
-
-            if self.ui.group_tray.isEnabled():
-                settings.setValue("Main/UseSystemTray", self.ui.cb_tray_enable.isChecked())
-                settings.setValue("Main/CloseToTray", self.ui.cb_tray_close_to.isChecked())
-
-            if self.ui.group_main_paths.isEnabled():
-                settings.setValue("Main/DefaultProjectFolder", self.ui.le_main_def_folder.text())
 
             if self.ui.cb_jack_port_alias.isEnabled():
                 settings.setValue("Main/JackPortAlias", self.ui.cb_jack_port_alias.currentIndex())
@@ -205,21 +133,9 @@ class SettingsW(QDialog):
             settings.setValue("Canvas/EyeCandy", self.ui.cb_canvas_eyecandy.checkState())
             settings.setValue("Canvas/Antialiasing", self.ui.cb_canvas_render_aa.checkState())
 
-        # ---------------------------------------
-
-        if not self.ui.lw_page.isRowHidden(TAB_INDEX_LADISH):
-            settings.setValue(LADISH_CONF_KEY_DAEMON_NOTIFY, self.ui.cb_ladish_notify.isChecked())
-            settings.setValue(LADISH_CONF_KEY_DAEMON_SHELL, self.ui.le_ladish_shell.text())
-            settings.setValue(LADISH_CONF_KEY_DAEMON_TERMINAL, self.ui.le_ladish_terminal.text())
-            settings.setValue(LADISH_CONF_KEY_DAEMON_STUDIO_AUTOSTART, self.ui.cb_ladish_studio_autostart.isChecked())
-            settings.setValue(LADISH_CONF_KEY_DAEMON_JS_SAVE_DELAY, self.ui.sb_ladish_jsdelay.value())
-
     @pyqtSlot()
     def slot_resetSettings(self):
         if self.ui.lw_page.currentRow() == TAB_INDEX_MAIN:
-            self.ui.le_main_def_folder.setText(SETTINGS_DEFAULT_PROJECT_FOLDER)
-            self.ui.cb_tray_enable.setChecked(self.fUseSystemTray)
-            self.ui.cb_tray_close_to.setChecked(self.fCloseToTray)
             self.ui.sb_gui_refresh.setValue(self.fRefreshInterval)
             self.ui.cb_jack_port_alias.setCurrentIndex(2)
 
@@ -231,16 +147,6 @@ class SettingsW(QDialog):
             self.ui.cb_canvas_use_opengl.setChecked(False)
             self.ui.cb_canvas_render_aa.setCheckState(Qt.PartiallyChecked)
             self.ui.cb_canvas_render_hq_aa.setChecked(False)
-
-        elif self.ui.lw_page.currentRow() == TAB_INDEX_LADISH:
-            self.ui.cb_ladish_notify.setChecked(LADISH_CONF_KEY_DAEMON_NOTIFY_DEFAULT)
-            self.ui.cb_ladish_studio_autostart.setChecked(LADISH_CONF_KEY_DAEMON_STUDIO_AUTOSTART_DEFAULT)
-            self.ui.le_ladish_shell.setText(LADISH_CONF_KEY_DAEMON_SHELL_DEFAULT)
-            self.ui.le_ladish_terminal.setText(LADISH_CONF_KEY_DAEMON_TERMINAL_DEFAULT)
-
-    @pyqtSlot()
-    def slot_getAndSetProjectPath(self):
-        getAndSetPath(self, self.ui.le_main_def_folder.text(), self.ui.le_main_def_folder)
 
     def done(self, r):
         QDialog.done(self, r)

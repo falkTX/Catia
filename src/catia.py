@@ -108,7 +108,27 @@ class CatiaMainW(AbstractCanvasJackClass):
         # -------------------------------------------------------------
         # Set-up GUI
 
-        setIcons(self, ["canvas", "jack", "transport", "misc"])
+        self.ui.act_canvas_arrange.setIcon(getIcon("view-sort-ascending"))
+        self.ui.act_canvas_refresh.setIcon(getIcon("view-refresh"))
+        self.ui.act_canvas_zoom_fit.setIcon(getIcon("zoom-fit-best"))
+        self.ui.act_canvas_zoom_in.setIcon(getIcon("zoom-in"))
+        self.ui.act_canvas_zoom_out.setIcon(getIcon("zoom-out"))
+        self.ui.act_canvas_zoom_100.setIcon(getIcon("zoom-original"))
+        self.ui.b_canvas_zoom_fit.setIcon(getIcon("zoom-fit-best"))
+        self.ui.b_canvas_zoom_in.setIcon(getIcon("zoom-in"))
+        self.ui.b_canvas_zoom_out.setIcon(getIcon("zoom-out"))
+        self.ui.b_canvas_zoom_100.setIcon(getIcon("zoom-original"))
+
+        self.ui.act_jack_clear_xruns.setIcon(getIcon("edit-clear"))
+
+        self.ui.act_transport_play.setIcon(getIcon("media-playback-start"))
+        self.ui.act_transport_stop.setIcon(getIcon("media-playback-stop"))
+        self.ui.act_transport_backwards.setIcon(getIcon("media-seek-backward"))
+        self.ui.act_transport_forwards.setIcon(getIcon("media-seek-forward"))
+        self.ui.b_transport_play.setIcon(getIcon("media-playback-start"))
+        self.ui.b_transport_stop.setIcon(getIcon("media-playback-stop"))
+        self.ui.b_transport_backwards.setIcon(getIcon("media-seek-backward"))
+        self.ui.b_transport_forwards.setIcon(getIcon("media-seek-forward"))
 
         self.ui.act_quit.setIcon(getIcon("application-exit"))
         self.ui.act_configure.setIcon(getIcon("configure"))
@@ -122,9 +142,16 @@ class CatiaMainW(AbstractCanvasJackClass):
         for sampleRate in SAMPLE_RATE_LIST:
             self.ui.cb_sample_rate.addItem(str(sampleRate))
 
-        self.ui.act_jack_bf_list = (self.ui.act_jack_bf_16, self.ui.act_jack_bf_32, self.ui.act_jack_bf_64, self.ui.act_jack_bf_128,
-                                    self.ui.act_jack_bf_256, self.ui.act_jack_bf_512, self.ui.act_jack_bf_1024, self.ui.act_jack_bf_2048,
-                                    self.ui.act_jack_bf_4096, self.ui.act_jack_bf_8192)
+        self.ui.act_jack_bf_list = (self.ui.act_jack_bf_16,
+                                    self.ui.act_jack_bf_32,
+                                    self.ui.act_jack_bf_64,
+                                    self.ui.act_jack_bf_128,
+                                    self.ui.act_jack_bf_256,
+                                    self.ui.act_jack_bf_512,
+                                    self.ui.act_jack_bf_1024,
+                                    self.ui.act_jack_bf_2048,
+                                    self.ui.act_jack_bf_4096,
+                                    self.ui.act_jack_bf_8192)
 
         if not haveALSA:
             self.ui.act_settings_show_alsa.setChecked(False)
@@ -167,12 +194,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         # -------------------------------------------------------------
         # Check DBus
 
-        # TODO remove
-        self.ui.act_tools_jack_start.setEnabled(False)
-        self.ui.act_tools_jack_stop.setEnabled(False)
-        self.ui.act_jack_configure.setEnabled(False)
-        self.ui.b_jack_configure.setEnabled(False)
-
         if haveDBus:
             if gDBus.a2j:
                 if gDBus.a2j.is_started():
@@ -201,8 +222,44 @@ class CatiaMainW(AbstractCanvasJackClass):
         # -------------------------------------------------------------
         # Set-up Connections
 
-        self.setCanvasConnections()
-        self.setJackConnections(["jack", "buffer-size", "transport", "misc"])
+        self.ui.act_canvas_arrange.setEnabled(False) # TODO, later
+        self.ui.act_canvas_arrange.triggered.connect(self.slot_canvasArrange)
+        self.ui.act_canvas_refresh.triggered.connect(self.slot_canvasRefresh)
+        self.ui.act_canvas_zoom_fit.triggered.connect(self.slot_canvasZoomFit)
+        self.ui.act_canvas_zoom_in.triggered.connect(self.slot_canvasZoomIn)
+        self.ui.act_canvas_zoom_out.triggered.connect(self.slot_canvasZoomOut)
+        self.ui.act_canvas_zoom_100.triggered.connect(self.slot_canvasZoomReset)
+        self.ui.act_canvas_save_image.triggered.connect(self.slot_canvasSaveImage)
+        self.ui.b_canvas_zoom_fit.clicked.connect(self.slot_canvasZoomFit)
+        self.ui.b_canvas_zoom_in.clicked.connect(self.slot_canvasZoomIn)
+        self.ui.b_canvas_zoom_out.clicked.connect(self.slot_canvasZoomOut)
+        self.ui.b_canvas_zoom_100.clicked.connect(self.slot_canvasZoomReset)
+
+        self.ui.act_jack_clear_xruns.triggered.connect(self.slot_JackClearXruns)
+        self.ui.cb_buffer_size.currentIndexChanged[str].connect(self.slot_jackBufferSize_ComboBox)
+        self.ui.cb_sample_rate.currentIndexChanged[str].connect(self.slot_jackSampleRate_ComboBox)
+        self.ui.b_xruns.clicked.connect(self.slot_JackClearXruns)
+
+        self.ui.act_jack_bf_16.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_32.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_64.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_128.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_256.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_512.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_1024.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_2048.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_4096.triggered.connect(self.slot_jackBufferSize_Menu)
+        self.ui.act_jack_bf_8192.triggered.connect(self.slot_jackBufferSize_Menu)
+
+        self.ui.act_transport_play.triggered.connect(self.slot_transportPlayPause)
+        self.ui.act_transport_stop.triggered.connect(self.slot_transportStop)
+        self.ui.act_transport_backwards.triggered.connect(self.slot_transportBackwards)
+        self.ui.act_transport_forwards.triggered.connect(self.slot_transportForwards)
+        self.ui.b_transport_play.clicked.connect(self.slot_transportPlayPause)
+        self.ui.b_transport_stop.clicked.connect(self.slot_transportStop)
+        self.ui.b_transport_backwards.clicked.connect(self.slot_transportBackwards)
+        self.ui.b_transport_forwards.clicked.connect(self.slot_transportForwards)
+        self.ui.label_time.customContextMenuRequested.connect(self.slot_transportViewMenu)
 
         self.ui.act_tools_a2j_start.triggered.connect(self.slot_A2JBridgeStart)
         self.ui.act_tools_a2j_stop.triggered.connect(self.slot_A2JBridgeStop)
@@ -903,7 +960,6 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         self.ui.cb_buffer_size.setEnabled(True)
         self.ui.cb_sample_rate.setEnabled(False) # TODO remove
-        self.ui.menu_Jack_Buffer_Size.setEnabled(True)
 
         self.ui.pb_dsp_load.setMaximum(100)
         self.ui.pb_dsp_load.setValue(0)
@@ -926,7 +982,6 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         self.ui.cb_buffer_size.setEnabled(False)
         self.ui.cb_sample_rate.setEnabled(False)
-        self.ui.menu_Jack_Buffer_Size.setEnabled(False)
 
         self.menuJackTransport(False)
         self.ui_setXruns(-1)
@@ -1242,8 +1297,8 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         settings.setValue("Geometry", self.saveGeometry())
         settings.setValue("ShowAlsaMIDI", self.ui.act_settings_show_alsa.isChecked())
-        settings.setValue("ShowToolbar",  self.ui.frame_toolbar.isVisible())
-        settings.setValue("ShowStatusbar", self.ui.frame_statusbar.isVisible())
+        settings.setValue("ShowToolbar",  self.ui.act_settings_show_toolbar.isChecked())
+        settings.setValue("ShowStatusbar", self.ui.act_settings_show_statusbar.isChecked())
         settings.setValue("TransportView", self.fCurTransportView)
 
     def loadSettings(self, geometry):
@@ -1296,6 +1351,9 @@ class CatiaMainW(AbstractCanvasJackClass):
 
 if __name__ == '__main__':
     # App initialization
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
     app = QApplication(sys.argv)
     app.setApplicationName("Catia")
     app.setApplicationVersion(VERSION)
@@ -1303,8 +1361,10 @@ if __name__ == '__main__':
     app.setWindowIcon(QIcon(":/scalable/catia.svg"))
 
     if jacklib is None:
-        QMessageBox.critical(None, app.translate("CatiaMainW", "Error"), app.translate("CatiaMainW",
-            "JACK is not available in this system, cannot use this application."))
+        QMessageBox.critical(None,
+                             app.translate("CatiaMainW", "Error"),
+                             app.translate("CatiaMainW",
+                                           "JACK is not available in this system, cannot use this application."))
         sys.exit(1)
 
     if haveDBus:

@@ -192,7 +192,7 @@ def getAndSetPath(self_, currentPath, lineEdit):
 # Get Icon from user theme, using our own as backup (Oxygen)
 
 def getIcon(icon, size=16):
-    return QIcon.fromTheme(icon, QIcon(":/%ix%i/%s.png" % (size, size, icon)))
+    return QIcon.fromTheme(icon, QIcon(":/%ix%i/%s.svgz" % (size, size, icon)))
 
 # ------------------------------------------------------------------------------------------------------------
 # Custom MessageBox
@@ -262,46 +262,3 @@ def showWindowHandler():
         gGui.showMaximized()
     else:
         gGui.showNormal()
-
-# ------------------------------------------------------------------------------------------------------------
-# Shared Icons
-
-def setIcons(self_, modes):
-    global gGui
-
-    if gGui is None:
-        gGui = self_
-
-    if "canvas" in modes:
-        gGui.ui.act_canvas_arrange.setIcon(getIcon("view-sort-ascending"))
-        gGui.ui.act_canvas_refresh.setIcon(getIcon("view-refresh"))
-        gGui.ui.act_canvas_zoom_fit.setIcon(getIcon("zoom-fit-best"))
-        gGui.ui.act_canvas_zoom_in.setIcon(getIcon("zoom-in"))
-        gGui.ui.act_canvas_zoom_out.setIcon(getIcon("zoom-out"))
-        gGui.ui.act_canvas_zoom_100.setIcon(getIcon("zoom-original"))
-        gGui.ui.b_canvas_zoom_fit.setIcon(getIcon("zoom-fit-best"))
-        gGui.ui.b_canvas_zoom_in.setIcon(getIcon("zoom-in"))
-        gGui.ui.b_canvas_zoom_out.setIcon(getIcon("zoom-out"))
-        gGui.ui.b_canvas_zoom_100.setIcon(getIcon("zoom-original"))
-
-    if "jack" in modes:
-        gGui.ui.act_jack_clear_xruns.setIcon(getIcon("edit-clear"))
-        gGui.ui.act_jack_configure.setIcon(getIcon("configure"))
-        gGui.ui.act_jack_render.setIcon(getIcon("media-record"))
-        gGui.ui.b_jack_clear_xruns.setIcon(getIcon("edit-clear"))
-        gGui.ui.b_jack_configure.setIcon(getIcon("configure"))
-        gGui.ui.b_jack_render.setIcon(getIcon("media-record"))
-
-    if "transport" in modes:
-        gGui.ui.act_transport_play.setIcon(getIcon("media-playback-start"))
-        gGui.ui.act_transport_stop.setIcon(getIcon("media-playback-stop"))
-        gGui.ui.act_transport_backwards.setIcon(getIcon("media-seek-backward"))
-        gGui.ui.act_transport_forwards.setIcon(getIcon("media-seek-forward"))
-        gGui.ui.b_transport_play.setIcon(getIcon("media-playback-start"))
-        gGui.ui.b_transport_stop.setIcon(getIcon("media-playback-stop"))
-        gGui.ui.b_transport_backwards.setIcon(getIcon("media-seek-backward"))
-        gGui.ui.b_transport_forwards.setIcon(getIcon("media-seek-forward"))
-
-    if "misc" in modes:
-        gGui.ui.act_quit.setIcon(getIcon("application-exit"))
-        gGui.ui.act_configure.setIcon(getIcon("configure"))
