@@ -204,8 +204,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.setCanvasConnections()
         self.setJackConnections(["jack", "buffer-size", "transport", "misc"])
 
-        self.ui.act_tools_jack_start.triggered.connect(self.slot_JackServerStart)
-        self.ui.act_tools_jack_stop.triggered.connect(self.slot_JackServerStop)
         self.ui.act_tools_a2j_start.triggered.connect(self.slot_A2JBridgeStart)
         self.ui.act_tools_a2j_stop.triggered.connect(self.slot_A2JBridgeStop)
         self.ui.act_tools_a2j_export_hw.triggered.connect(self.slot_A2JBridgeExportHW)
@@ -901,7 +899,6 @@ class CatiaMainW(AbstractCanvasJackClass):
                 self.jackStopped()
                 return False
 
-        self.menuJackServer(True)
         self.menuJackTransport(True)
 
         self.ui.cb_buffer_size.setEnabled(True)
@@ -931,7 +928,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.ui.cb_sample_rate.setEnabled(False)
         self.ui.menu_Jack_Buffer_Size.setEnabled(False)
 
-        self.menuJackServer(False)
         self.menuJackTransport(False)
         self.ui_setXruns(-1)
 
