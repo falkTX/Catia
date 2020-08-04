@@ -541,7 +541,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         jacklib.set_xrun_callback(gJack.client, self.JackXRunCallback, None)
         jacklib.set_port_registration_callback(gJack.client, self.JackPortRegistrationCallback, None)
         jacklib.set_port_connect_callback(gJack.client, self.JackPortConnectCallback, None)
-        jacklib.set_session_callback(gJack.client, self.JackSessionCallback, None)
         jacklib.on_shutdown(gJack.client, self.JackShutdownCallback, None)
 
         jacklib.set_client_rename_callback(gJack.client, self.JackClientRenameCallback, None)
@@ -951,7 +950,7 @@ class CatiaMainW(AbstractCanvasJackClass):
 
     def jackStarted(self):
         if not gJack.client:
-            gJack.client = jacklib.client_open("catia", jacklib.JackNoStartServer | jacklib.JackSessionID, None)
+            gJack.client = jacklib.client_open("catia", jacklib.JackNoStartServer, None)
             if not gJack.client:
                 self.jackStopped()
                 return False
@@ -1086,23 +1085,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         if DEBUG: print("JackPortRenameCallback(%i, \"%s\", \"%s\")" % (portId, oldName, newName))
         self.PortRenameCallback.emit(portId, str(oldName, encoding="utf-8"), str(newName, encoding="utf-8"))
         return 0
-
-    def JackSessionCallback(self, event, arg):
-        if WINDOWS:
-            filepath = os.path.join(sys.argv[0])
-        else:
-            if sys.argv[0].startswith("/"):
-                filepath = "catia"
-            else:
-                filepath = os.path.join(sys.path[0], "catia.py")
-
-        event.command_line = str(filepath).encode("utf-8")
-        jacklib.session_reply(gJack.client, event)
-
-        if event.type == jacklib.JackSessionSaveAndQuit:
-            app.quit()
-
-            #jacklib.session_event_free(event)
 
     def JackShutdownCallback(self, arg):
         if DEBUG: print("JackShutdownCallback()")
