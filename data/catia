@@ -2,7 +2,7 @@
 
 # Check if already running
 
-PROCS=`ps -f -u $USER | grep /share/cadence/src/catia.py | grep python`
+PROCS=`ps -f -u $USER | grep /share/catia/catia.py | grep python`
 
 if [ x"$PROCS" != x"" ]; then
 
@@ -35,4 +35,4 @@ fi
 
 # We only got here if not running yet
 INSTALL_PREFIX="X-PREFIX-X"
-exec $PYTHON $INSTALL_PREFIX/share/cadence/src/catia.py "$@"
+exec $PYTHON $INSTALL_PREFIX/share/catia/catia.py "$@"
