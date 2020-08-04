@@ -19,12 +19,8 @@
 # ------------------------------------------------------------------------------------------------------------
 # Imports (Global)
 
-if True:
-    from PyQt5.QtCore import pyqtSlot, QSettings
-    from PyQt5.QtWidgets import QDialog, QDialogButtonBox
-else:
-    from PyQt4.QtCore import pyqtSlot, QSettings
-    from PyQt4.QtGui import QDialog, QDialogButtonBox
+from PyQt5.QtCore import pyqtSlot, QSettings
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
 # ------------------------------------------------------------------------------------------------------------
 # Imports (Custom Stuff)

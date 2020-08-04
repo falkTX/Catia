@@ -19,12 +19,8 @@
 # ------------------------------------------------------------------------------------------------------------
 # Imports (Global)
 
-if True:
-    from PyQt5.QtCore import Qt
-    from PyQt5.QtGui import QColor, QFont, QPen, QPixmap
-else:
-    from PyQt4.QtCore import Qt
-    from PyQt4.QtGui import QColor, QFont, QPen, QPixmap
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QFont, QPen, QPixmap
 
 # ------------------------------------------------------------------------------------------------------------
 # patchcanvas-theme.cpp

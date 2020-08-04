@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # JACK Patchbay
-# Copyright (C) 2010-2018 Filipe Coelho <falktx@falktx.com>
+# Copyright (C) 2010-2020 Filipe Coelho <falktx@falktx.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -52,16 +52,11 @@ if LINUX:
         if not os.path.exists(os.path.join(iPATH, "aconnect")):
             continue
 
+        from subprocess import getoutput
         haveALSA = True
-
-        if sys.version_info >= (3, 0):
-            from subprocess import getoutput
-        else:
-            from commands import getoutput
 
         if DEBUG:
             print("Using experimental ALSA-MIDI support")
-
         break
 
 # ------------------------------------------------------------------------------------------------------------
@@ -172,15 +167,13 @@ class CatiaMainW(AbstractCanvasJackClass):
         # -------------------------------------------------------------
         # Check DBus
 
-        if haveDBus:
-            if gDBus.jack:
-                pass
-            else:
-                self.ui.act_tools_jack_start.setEnabled(False)
-                self.ui.act_tools_jack_stop.setEnabled(False)
-                self.ui.act_jack_configure.setEnabled(False)
-                self.ui.b_jack_configure.setEnabled(False)
+        # TODO remove
+        self.ui.act_tools_jack_start.setEnabled(False)
+        self.ui.act_tools_jack_stop.setEnabled(False)
+        self.ui.act_jack_configure.setEnabled(False)
+        self.ui.b_jack_configure.setEnabled(False)
 
+        if haveDBus:
             if gDBus.a2j:
                 if gDBus.a2j.is_started():
                     self.a2jStarted()
@@ -194,10 +187,6 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         else:
             # No DBus
-            self.ui.act_tools_jack_start.setEnabled(False)
-            self.ui.act_tools_jack_stop.setEnabled(False)
-            self.ui.act_jack_configure.setEnabled(False)
-            self.ui.b_jack_configure.setEnabled(False)
             self.ui.act_tools_a2j_start.setEnabled(False)
             self.ui.act_tools_a2j_stop.setEnabled(False)
             self.ui.act_tools_a2j_export_hw.setEnabled(False)
@@ -239,7 +228,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         # -------------------------------------------------------------
         # Set-up DBus
 
-        if gDBus.jack or gDBus.a2j:
+        if gDBus.a2j:
             gDBus.bus.add_signal_receiver(self.DBusSignalReceiver, destination_keyword="dest", path_keyword="path",
                 member_keyword="member", interface_keyword="interface", sender_keyword="sender")
 
@@ -916,7 +905,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.menuJackTransport(True)
 
         self.ui.cb_buffer_size.setEnabled(True)
-        self.ui.cb_sample_rate.setEnabled(bool(gDBus.jack)) # DBus.jack and jacksettings.getSampleRate() != -1
+        self.ui.cb_sample_rate.setEnabled(False) # TODO remove
         self.ui.menu_Jack_Buffer_Size.setEnabled(True)
 
         self.ui.pb_dsp_load.setMaximum(100)
@@ -938,31 +927,9 @@ class CatiaMainW(AbstractCanvasJackClass):
         patchcanvas.clear()
         self.initPorts()
 
-        if self.fNextSampleRate:
-            self.jack_setSampleRate(self.fNextSampleRate)
-
-        if gDBus.jack:
-            bufferSize = jacksettings.getBufferSize()
-            sampleRate = jacksettings.getSampleRate()
-            bufferSizeTest = bool(bufferSize != -1)
-            sampleRateTest = bool(sampleRate != -1)
-
-            if bufferSizeTest:
-                self.ui_setBufferSize(bufferSize)
-
-            if sampleRateTest:
-                self.ui_setSampleRate(sampleRate)
-
-            self.ui_setRealTime(jacksettings.isRealtime())
-
-            self.ui.cb_buffer_size.setEnabled(bufferSizeTest)
-            self.ui.cb_sample_rate.setEnabled(sampleRateTest)
-            self.ui.menu_Jack_Buffer_Size.setEnabled(bufferSizeTest)
-
-        else:
-            self.ui.cb_buffer_size.setEnabled(False)
-            self.ui.cb_sample_rate.setEnabled(False)
-            self.ui.menu_Jack_Buffer_Size.setEnabled(False)
+        self.ui.cb_buffer_size.setEnabled(False)
+        self.ui.cb_sample_rate.setEnabled(False)
+        self.ui.menu_Jack_Buffer_Size.setEnabled(False)
 
         self.menuJackServer(False)
         self.menuJackTransport(False)
@@ -985,12 +952,6 @@ class CatiaMainW(AbstractCanvasJackClass):
     def a2jStopped(self):
         self.menuA2JBridge(False)
 
-    def menuJackServer(self, started):
-        if gDBus.jack:
-            self.ui.act_tools_jack_start.setEnabled(not started)
-            self.ui.act_tools_jack_stop.setEnabled(started)
-            self.menuA2JBridge(False)
-
     def menuJackTransport(self, enabled):
         self.ui.act_transport_play.setEnabled(enabled)
         self.ui.act_transport_stop.setEnabled(enabled)
@@ -1000,14 +961,14 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.ui.group_transport.setEnabled(enabled)
 
     def menuA2JBridge(self, started):
-        if gDBus.jack and not gDBus.jack.IsStarted():
-            self.ui.act_tools_a2j_start.setEnabled(False)
-            self.ui.act_tools_a2j_stop.setEnabled(False)
-            self.ui.act_tools_a2j_export_hw.setEnabled(bool(gDBus.a2j) and not gDBus.a2j.is_started())
-        else:
+        if gJack.client:
             self.ui.act_tools_a2j_start.setEnabled(not started)
             self.ui.act_tools_a2j_stop.setEnabled(started)
             self.ui.act_tools_a2j_export_hw.setEnabled(not started)
+        else:
+            self.ui.act_tools_a2j_start.setEnabled(False)
+            self.ui.act_tools_a2j_stop.setEnabled(False)
+            self.ui.act_tools_a2j_export_hw.setEnabled(bool(gDBus.a2j) and not gDBus.a2j.is_started())
 
     def DBusSignalReceiver(self, *args, **kwds):
         if kwds["interface"] == "org.freedesktop.DBus" and kwds["path"] == "/org/freedesktop/DBus" and kwds["member"] == "NameOwnerChanged":
@@ -1033,13 +994,6 @@ class CatiaMainW(AbstractCanvasJackClass):
 
     def DBusReconnect(self):
         global gA2JClientName
-
-        try:
-            gDBus.jack = gDBus.bus.get_object("org.jackaudio.service", "/org/jackaudio/Controller")
-            jacksettings.initBus(gDBus.bus)
-        except:
-            gDBus.jack = None
-
         try:
             gDBus.a2j = dbus.Interface(gDBus.bus.get_object("org.gna.home.a2jmidid", "/"), "org.gna.home.a2jmidid.control")
             gA2JClientName = str(gDBus.a2j.get_jack_client_name())
@@ -1109,24 +1063,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         # refresh canvas (remove jack ports)
         patchcanvas.clear()
         self.initPorts()
-
-    @pyqtSlot()
-    def slot_JackServerStart(self):
-        ret = False
-        if gDBus.jack:
-            try:
-                ret = bool(gDBus.jack.StartServer())
-            except:
-                QMessageBox.warning(self, self.tr("Warning"), self.tr("Failed to start JACK, please check the logs for more information."))
-                #self.jackStopped()
-        return ret
-
-    @pyqtSlot()
-    def slot_JackServerStop(self):
-        ret = False
-        if gDBus.jack:
-            ret = bool(gDBus.jack.StopServer())
-        return ret
 
     @pyqtSlot()
     def slot_JackClearXruns(self):
@@ -1258,15 +1194,6 @@ class CatiaMainW(AbstractCanvasJackClass):
     def slot_handleCrash_jack(self):
         self.DBusReconnect()
 
-        if gDBus.jack:
-            self.ui.act_jack_configure.setEnabled(True)
-            self.ui.b_jack_configure.setEnabled(True)
-        else:
-            self.ui.act_tools_jack_start.setEnabled(False)
-            self.ui.act_tools_jack_stop.setEnabled(False)
-            self.ui.act_jack_configure.setEnabled(False)
-            self.ui.b_jack_configure.setEnabled(False)
-
         if gDBus.a2j:
             if gDBus.a2j.is_started():
                 self.a2jStarted()
@@ -1389,31 +1316,17 @@ if __name__ == '__main__':
         gDBus.bus  = dbus.SessionBus(mainloop=gDBus.loop)
 
         try:
-            gDBus.jack = gDBus.bus.get_object("org.jackaudio.service", "/org/jackaudio/Controller")
-            jacksettings.initBus(gDBus.bus)
-        except:
-            gDBus.jack = None
-
-        try:
             gDBus.a2j = dbus.Interface(gDBus.bus.get_object("org.gna.home.a2jmidid", "/"), "org.gna.home.a2jmidid.control")
             gA2JClientName = str(gDBus.a2j.get_jack_client_name())
         except:
             gDBus.a2j = None
             gA2JClientName = None
 
-        if DEBUG and (gDBus.jack or gDBus.a2j):
-            string = "Using DBus for "
-            if gDBus.jack:
-                string += "JACK"
-                if gDBus.a2j:
-                    string += " and a2jmidid"
-            elif gDBus.a2j:
-                string += "a2jmidid"
-            print(string)
+        if DEBUG and gDBus.a2j:
+            print("Using DBus for a2jmidid")
 
     else:
-        gDBus.jack = None
-        gDBus.a2j  = None
+        gDBus.a2j = None
         gA2JClientName = None
         if DEBUG:
             print("Not using DBus")

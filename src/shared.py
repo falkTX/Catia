@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Common/Shared code
-# Copyright (C) 2010-2018 Filipe Coelho <falktx@falktx.com>
+# Copyright (C) 2010-2020 Filipe Coelho <falktx@falktx.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,21 +24,14 @@ import sys
 from codecs import open as codecopen
 from unicodedata import normalize
 
-if True:
-    from PyQt5.QtCore import pyqtSignal, qWarning
-    from PyQt5.QtGui import QIcon
-    from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
-else:
-    from PyQt4.QtCore import pyqtSignal, qWarning
-    from PyQt4.QtGui import QIcon
-    from PyQt4.QtGui import QApplication, QFileDialog, QMessageBox
+from PyQt5.QtCore import pyqtSignal, qWarning
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 # ------------------------------------------------------------------------------------------------------------
 # Set Platform
 
 if sys.platform == "darwin":
-    from PyQt5.QtGui import qt_mac_set_menubar_icons
-    qt_mac_set_menubar_icons(False)
     HAIKU   = False
     LINUX   = False
     MACOS   = True

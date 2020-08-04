@@ -19,14 +19,9 @@
 # ------------------------------------------------------------------------------------------------------------
 # Imports (Global)
 
-if True:
-    from PyQt5.QtCore import pyqtSlot, QTimer
-    from PyQt5.QtGui import QCursor, QFontMetrics, QImage, QPainter
-    from PyQt5.QtWidgets import QMainWindow, QMenu
-else:
-    from PyQt4.QtCore import pyqtSlot, QTimer
-    from PyQt4.QtGui import QCursor, QFontMetrics, QImage, QPainter
-    from PyQt4.QtGui import QMainWindow, QMenu
+from PyQt5.QtCore import pyqtSlot, QTimer
+from PyQt5.QtGui import QCursor, QFontMetrics, QImage, QPainter
+from PyQt5.QtWidgets import QMainWindow, QMenu
 
 # ------------------------------------------------------------------------------------------------------------
 # Imports (Custom Stuff)
@@ -144,26 +139,12 @@ class AbstractCanvasJackClass(QMainWindow):
     # JACK Property change calls
 
     def jack_setBufferSize(self, bufferSize):
-        if self.fBufferSize == bufferSize:
+        if self.fBufferSize == bufferSize or not gJack.client:
             return
 
-        if gJack.client:
-            failed = bool(jacklib.set_buffer_size(gJack.client, bufferSize) != 0)
-        else:
-            failed = bool(jacksettings.setBufferSize(bufferSize))
-
-        if failed:
+        if jacklib.set_buffer_size(gJack.client, bufferSize) != 0:
             print("Failed to change buffer-size as %i, reset to %i" % (bufferSize, self.fBufferSize))
             self.ui_setBufferSize(self.fBufferSize, True)
-
-    def jack_setSampleRate(self, sampleRate):
-        if gJack.client:
-            # Show change-in-future dialog
-            self.ui_setSampleRate(sampleRate, True)
-        else:
-            # Try to set sampleRate via dbus now
-            if jacksettings.setSampleRate(sampleRate):
-                self.ui_setSampleRate(sampleRate)
 
     @pyqtSlot(bool)
     def slot_jackBufferSize_Menu(self, clicked):
