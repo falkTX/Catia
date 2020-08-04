@@ -1,0 +1,28 @@
+language: cpp
+os: linux
+
+jobs:
+  include:
+    # 18.04/bionic
+    - os: linux
+      compiler: gcc
+      dist: bionic
+
+    # 20.04/focal
+    - os: linux
+      compiler: gcc
+      dist: focal
+
+before_install:
+  - bash ${TRAVIS_BUILD_DIR}/.travis/before_install.sh
+
+install:
+  - bash ${TRAVIS_BUILD_DIR}/.travis/install.sh
+
+script:
+  - make
+  - bash ${TRAVIS_BUILD_DIR}/.travis/script.sh
+
+#notifications:
+  #email: true
+  #irc: "ircs://chat.freenode.net:7070/#kxstudio"
