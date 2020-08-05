@@ -29,6 +29,17 @@
         <file>16x16/zoom-original.svgz</file>
         <file>16x16/zoom-out.svgz</file>
 
+        <file>cursors/zoom_white.png</file>
+        <file>cursors/zoom_black.png</file>
+        <file>cursors/zoom-in_white.png</file>
+        <file>cursors/zoom-in_black.png</file>
+        <file>cursors/zoom-out_white.png</file>
+        <file>cursors/zoom-out_black.png</file>
+        <file>cursors/zoom-area_white.png</file>
+        <file>cursors/zoom-area_black.png</file>
+        <file>cursors/cut_white.png</file>
+        <file>cursors/cut_black.png</file>
+
         <file>scalable/canvas.svg</file>
         <file>scalable/catia.svg</file>
         <file>scalable/jack.svg</file>
