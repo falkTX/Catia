@@ -54,29 +54,12 @@ class DBusObject(object):
         'loop',
         'bus',
         'a2j',
-        'jack',
-        'ladish_control',
-        'ladish_studio',
-        'ladish_room',
-        'ladish_graph',
-        'ladish_manager',
-        'ladish_app_iface',
-        'ladish_app_daemon',
-        'patchbay'
     ]
 
 gDBus = DBusObject()
 gDBus.loop = None
 gDBus.bus  = None
 gDBus.a2j  = None
-gDBus.jack = None
-gDBus.ladish_control = None
-gDBus.ladish_studio  = None
-gDBus.ladish_room    = None
-gDBus.ladish_graph   = None
-gDBus.ladish_app_iface  = None
-gDBus.ladish_app_daemon = None
-gDBus.patchbay = None
 
 # ------------------------------------------------------------------------------------------------------------
 # Global JACK object

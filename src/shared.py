@@ -153,59 +153,10 @@ def cString(value):
     return value.decode("utf-8", errors="ignore")
 
 # ------------------------------------------------------------------------------------------------------------
-# Check if a value is a number (float support)
-
-def isNumber(value):
-    try:
-        float(value)
-        return True
-    except:
-        return False
-
-# ------------------------------------------------------------------------------------------------------------
-# Convert a value to a list
-
-def toList(value):
-    if value is None:
-        return []
-    elif not isinstance(value, list):
-        return [value]
-    else:
-        return value
-
-# ------------------------------------------------------------------------------------------------------------
-# Unicode open
-
-def uopen(filename, mode="r"):
-    return codecopen(filename, encoding="utf-8", mode=mode)
-
-# ------------------------------------------------------------------------------------------------------------
-# QLineEdit and QPushButton combo
-
-def getAndSetPath(self_, currentPath, lineEdit):
-    newPath = QFileDialog.getExistingDirectory(self_, self_.tr("Set Path"), currentPath, QFileDialog.ShowDirsOnly)
-    if newPath:
-        lineEdit.setText(newPath)
-    return newPath
-
-# ------------------------------------------------------------------------------------------------------------
 # Get Icon from user theme, using our own as backup (Oxygen)
 
 def getIcon(icon, size=16):
     return QIcon.fromTheme(icon, QIcon(":/%ix%i/%s.svgz" % (size, size, icon)))
-
-# ------------------------------------------------------------------------------------------------------------
-# Custom MessageBox
-
-def CustomMessageBox(self_, icon, title, text, extraText="", buttons=QMessageBox.Yes|QMessageBox.No, defButton=QMessageBox.No):
-    msgBox = QMessageBox(self_)
-    msgBox.setIcon(icon)
-    msgBox.setWindowTitle(title)
-    msgBox.setText(text)
-    msgBox.setInformativeText(extraText)
-    msgBox.setStandardButtons(buttons)
-    msgBox.setDefaultButton(defButton)
-    return msgBox.exec_()
 
 # ------------------------------------------------------------------------------------------------------------
 # Signal handler
