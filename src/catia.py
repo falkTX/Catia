@@ -59,6 +59,8 @@ if LINUX:
             print("Using experimental ALSA-MIDI support")
         break
 
+haveALSA = False
+
 # ------------------------------------------------------------------------------------------------------------
 # Global Variables
 
@@ -437,7 +439,7 @@ class CatiaMainW(AbstractCanvasJackClass):
                             "Rename functions rely on JACK aliases and cannot be done in ALSA ports"))
                         return
 
-                    if portNameR.split(":", 1)[0] == gA2JClientName:
+                    if False and portNameR.split(":", 1)[0] == gA2JClientName:
                         a2jSplit = portNameR.split(":", 3)
                         portName = "%s:%s: %s" % (a2jSplit[0], a2jSplit[1], portShortName)
                     else:
@@ -582,7 +584,7 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         h = 0
         for i in range(len(portNameList)):
-            if portNameList[i - h].split(":")[0] == gA2JClientName:
+            if False and portNameList[i - h].split(":")[0] == gA2JClientName:
                 portName = portNameList.pop(i - h)
                 a2jNameList.append(portName)
                 h += 1
@@ -877,7 +879,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         else:
             portMode = patchcanvas.PORT_MODE_NULL
 
-        if groupName == gA2JClientName:
+        if False and groupName == gA2JClientName:
             portType  = patchcanvas.PORT_TYPE_MIDI_JACK
             groupName = portName.replace("%s:" % gA2JClientName, "", 1).split(" [", 1)[0]
             portShortName = portName.split("): ", 1)[1]
