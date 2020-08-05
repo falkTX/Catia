@@ -52,7 +52,8 @@ install:
 	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/128x128/apps
 	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/256x256/apps
 	install -d $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps
-	install -d $(DESTDIR)$(PREFIX)/share/catia
+	install -d $(DESTDIR)$(PREFIX)/share/catia/jacklib
+	install -d $(DESTDIR)$(PREFIX)/share/catia/patchcanvas
 
 	# Install script files and binaries
 	install -m 755 \
@@ -70,7 +71,9 @@ install:
 	install -m 644 resources/scalable/catia.svg $(DESTDIR)$(PREFIX)/share/icons/hicolor/scalable/apps/
 
 	# Install main code
-	install -m 755 src/*.py $(DESTDIR)$(PREFIX)/share/catia/
+	install -m 755 src/*.py             $(DESTDIR)$(PREFIX)/share/catia/
+	install -m 755 src/jacklib/*.py     $(DESTDIR)$(PREFIX)/share/catia/jacklib/
+	install -m 755 src/patchcanvas/*.py $(DESTDIR)$(PREFIX)/share/catia/patchcanvas/
 
 	# Adjust PREFIX value in script files
 	sed -i "s?X-PREFIX-X?$(PREFIX)?" \
