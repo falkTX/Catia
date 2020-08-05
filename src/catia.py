@@ -23,6 +23,8 @@ import ui_catia
 from shared_canvasjack import *
 from shared_settings import *
 
+from PyQt5.QtWidgets import QInputDialog, QLineEdit
+
 # ------------------------------------------------------------------------------------------------------------
 # Try Import OpenGL
 
@@ -226,10 +228,11 @@ class CatiaMainW(AbstractCanvasJackClass):
             jacklib.set_property(gJack.client, jacklib.uuid_parse(uuidstr), URI_POSITION, value, "text/plain")
 
         elif action == patchcanvas.ACTION_PORT_INFO:
-            portId = value1
+            groupId = value1
+            portId = value2
 
             for port in self.fPortList:
-                if port[iPortId] == portId:
+                if port[iPortId] == portId and port[iPortGroupId] == groupId:
                     portNameR = port[iPortNameR]
                     portNameG = port[iPortGroupName]
                     break
@@ -297,13 +300,27 @@ class CatiaMainW(AbstractCanvasJackClass):
             QMessageBox.information(self, self.tr("Port Information"), info)
 
         elif action == patchcanvas.ACTION_PORT_RENAME:
-            portId = value1
-            portShortName = asciiString(valueStr)
+            groupId = value1
+            portId = value2
+
+            oldName = self.canvas_getGroupName(groupId)
+
+            if not oldName:
+                return
+
+            newNameTry = QInputDialog.getText(self,
+                                              self.tr("Rename port"),
+                                              self.tr("New port name:"), QLineEdit.Normal, oldName)
+
+            if not (newNameTry[1] and newNameTry[0] and oldName != newNameTry[0]):
+                return
+
+            newName = newNameTry[0]
 
             for port in self.fPortList:
                 if port[iPortId] == portId:
                     portNameR = port[iPortNameR]
-                    portName = "%s:%s" % (port[iPortGroupName], portShortName)
+                    portName = "%s:%s" % (port[iPortGroupName], newName)
                     break
             else:
                 return
@@ -327,7 +344,7 @@ class CatiaMainW(AbstractCanvasJackClass):
                 jacklib.port_set_alias(portPtr, portName)
 
             if jacklib.port_set_alias(portPtr, portName) == 0:
-                patchcanvas.renamePort(portId, portShortName)
+                patchcanvas.renamePort(groupId, portId, newName)
 
         elif action == patchcanvas.ACTION_PORTS_CONNECT:
             gOut, pOut, gIn, pIn = tuple(int(i) for i in valueStr.split(":"))
@@ -579,11 +596,11 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         return portId
 
-    def canvas_removeJackPort(self, portId):
-        patchcanvas.removePort(portId)
+    def canvas_removeJackPort(self, groupId, portId):
+        patchcanvas.removePort(groupId, portId)
 
         for port in self.fPortList:
-            if port[iPortId] == portId:
+            if port[iPortId] == portId and port[iPortGroupId] == groupId:
                 groupName = port[iPortGroupName]
                 self.fPortList.remove(port)
                 break
@@ -597,8 +614,8 @@ class CatiaMainW(AbstractCanvasJackClass):
         else:
             self.canvas_removeGroup(groupName)
 
-    def canvas_renamePort(self, portId, portShortName):
-        patchcanvas.renamePort(portId, portShortName)
+    def canvas_renamePort(self, groupId, portId, portShortName):
+        patchcanvas.renamePort(groupId, portId, portShortName)
 
     def canvas_connectPorts(self, outGroupId, outPortId, inGroupId, inPortId):
         connectionId = self.fLastConnectionId
@@ -805,11 +822,12 @@ class CatiaMainW(AbstractCanvasJackClass):
             for port in self.fPortList:
                 if port[iPortNameR] == portNameR:
                     portIdCanvas = port[iPortId]
+                    groupId = port[iPortGroupId]
                     break
             else:
                 return
 
-            self.canvas_removeJackPort(portIdCanvas)
+            self.canvas_removeJackPort(groupId, portIdCanvas)
 
     @pyqtSlot(int, int, bool)
     def slot_PortConnectCallback(self, portIdJackA, portIdJackB, connectYesNo):
@@ -831,6 +849,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         for port in self.fPortList:
             if port[iPortNameR] == oldName:
                 portIdCanvas = port[iPortId]
+                groupId = port[iPortGroupId]
                 port[iPortNameR] = newName
                 break
         else:
@@ -843,7 +862,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         elif aliases[0] == 2 and self.fSavedSettings["Main/JackPortAlias"] == 2:
             pass
         else:
-            self.canvas_renamePort(portIdCanvas, portShortName)
+            self.canvas_renamePort(groupId, portIdCanvas, portShortName)
 
     @pyqtSlot(jacklib.jack_uuid_t, str, int)
     def slot_PropertyChangeCallback(self, uuid, key, change):
