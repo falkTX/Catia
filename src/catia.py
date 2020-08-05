@@ -319,7 +319,14 @@ class CatiaMainW(AbstractCanvasJackClass):
         elif action == patchcanvas.ACTION_GROUP_POSITION:
             groupId = value1
             x1, y1, x2, y2 = tuple(int(i) for i in valueStr.split(":"))
-            #host.patchbay_set_group_pos(gCarla.gui.fExternalPatchbay, groupId, x1, y1, x2, y2)
+            groupName, groupType = self.canvas_getGroupNameAndType(groupId)
+            if groupType != GROUP_TYPE_JACK:
+                return
+            uuidstr = jacklib.get_uuid_for_client_name(gJack.client, groupName)
+            if uuidstr is None:
+                return
+            value = "%i:%i:%i:%i" % (x1, y1, x2, y2)
+            jacklib.set_property(gJack.client, jacklib.uuid_parse(uuidstr), URI_POSITION, value, "text/plain")
 
         elif action == patchcanvas.ACTION_PORT_INFO:
             portId = value1
@@ -358,7 +365,7 @@ class CatiaMainW(AbstractCanvasJackClass):
                 portPtr   = jacklib.port_by_name(gJack.client, portNameR)
                 portFlags = jacklib.port_flags(portPtr)
                 groupName = portNameR.split(":", 1)[0]
-                portShortName = str(jacklib.port_short_name(portPtr), encoding="utf-8")
+                portShortName = jacklib.port_short_name(portPtr)
 
                 aliases = jacklib.port_get_aliases(portPtr)
                 if aliases[0] == 1:
@@ -385,7 +392,7 @@ class CatiaMainW(AbstractCanvasJackClass):
 
                 flagsText = " | ".join(flags)
 
-                portTypeStr = str(jacklib.port_type(portPtr), encoding="utf-8")
+                portTypeStr = jacklib.port_type(portPtr)
                 if portTypeStr == jacklib.JACK_DEFAULT_AUDIO_TYPE:
                     typeText = self.tr("JACK Audio")
                 elif portTypeStr == jacklib.JACK_DEFAULT_MIDI_TYPE:
@@ -737,6 +744,12 @@ class CatiaMainW(AbstractCanvasJackClass):
                 return group[iGroupId]
         return -1
 
+    def canvas_getGroupNameAndType(self, groupId):
+        for group in self.fGroupList:
+            if group[iGroupId] == groupId:
+                return group[iGroupName], group[iGroupType]
+        return "", GROUP_TYPE_NULL
+
     def canvas_addAlsaGroup(self, alsaGroupId, groupName, hwSplit):
         groupId = self.fLastGroupId
 
@@ -872,7 +885,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         else:
             portShortName = portName.replace("%s:" % groupName, "", 1)
 
-            portTypeStr = str(jacklib.port_type(portPtr), encoding="utf-8")
+            portTypeStr = jacklib.port_type(portPtr)
             if portTypeStr == jacklib.JACK_DEFAULT_AUDIO_TYPE:
                 portType = patchcanvas.PORT_TYPE_AUDIO_JACK
             elif portTypeStr == jacklib.JACK_DEFAULT_MIDI_TYPE:
@@ -1204,7 +1217,7 @@ class CatiaMainW(AbstractCanvasJackClass):
     @pyqtSlot(int, bool)
     def slot_PortRegistrationCallback(self, portIdJack, registerYesNo):
         portPtr = jacklib.port_by_id(gJack.client, portIdJack)
-        portNameR = str(jacklib.port_name(portPtr), encoding="utf-8")
+        portNameR = jacklib.port_name(portPtr)
 
         if registerYesNo:
             self.canvas_addJackPort(portPtr, portNameR)
@@ -1222,8 +1235,8 @@ class CatiaMainW(AbstractCanvasJackClass):
     def slot_PortConnectCallback(self, portIdJackA, portIdJackB, connectYesNo):
         portPtrA = jacklib.port_by_id(gJack.client, portIdJackA)
         portPtrB = jacklib.port_by_id(gJack.client, portIdJackB)
-        portRealNameA = str(jacklib.port_name(portPtrA), encoding="utf-8")
-        portRealNameB = str(jacklib.port_name(portPtrB), encoding="utf-8")
+        portRealNameA = jacklib.port_name(portPtrA)
+        portRealNameB = jacklib.port_name(portPtrB)
 
         if connectYesNo:
             self.canvas_connectPortsByName(portRealNameA, portRealNameB)
@@ -1233,7 +1246,7 @@ class CatiaMainW(AbstractCanvasJackClass):
     @pyqtSlot(int, str, str)
     def slot_PortRenameCallback(self, portIdJack, oldName, newName):
         portPtr = jacklib.port_by_id(gJack.client, portIdJack)
-        portShortName = str(jacklib.port_short_name(portPtr), encoding="utf-8")
+        portShortName = jacklib.port_short_name(portPtr)
 
         for port in self.fPortList:
             if port[iPortNameR] == oldName:

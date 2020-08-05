@@ -964,7 +964,7 @@ def port_flags(port):
 
 
 def port_type(port):
-    return jlib.jack_port_type(port)
+    return _d(jlib.jack_port_type(port))
 
 
 # JACK2 only:
@@ -1911,11 +1911,11 @@ def remove_port_property(client, port, key, encoding=ENCODING):
 
 
 def set_property(client, subject, key, value, type=None, encoding=ENCODING):
-    if type and encoding:
-        type = _e(type, encoding)
-
-    if value and encoding:
+    if value is not None and encoding:
         value = _e(value, encoding)
+
+    if type is not None and encoding:
+        type = _e(type, encoding)
 
     return jlib.jack_set_property(client, subject, _e(key, encoding), value, type)
 
