@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Common/Shared code related to Canvas and JACK
-# Copyright (C) 2010-2018 Filipe Coelho <falktx@falktx.com>
+# Copyright (C) 2010-2020 Filipe Coelho <falktx@falktx.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,22 +46,6 @@ TRANSPORT_VIEW_BBT    = 1
 TRANSPORT_VIEW_FRAMES = 2
 
 BUFFER_SIZE_LIST = (16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192)
-SAMPLE_RATE_LIST = (22050, 32000, 44100, 48000, 88200, 96000, 192000)
-
-# ------------------------------------------------------------------------------------------------------------
-# Global DBus object
-
-class DBusObject(object):
-    __slots__ = [
-        'loop',
-        'bus',
-        'a2j',
-    ]
-
-gDBus = DBusObject()
-gDBus.loop = None
-gDBus.bus  = None
-gDBus.a2j  = None
 
 # ------------------------------------------------------------------------------------------------------------
 # Global JACK object
@@ -355,45 +339,16 @@ class AbstractCanvasJackClass(QMainWindow):
 
             self.ui.cb_buffer_size.blockSignals(False)
 
-        if self.fAppName == "Catia" and bufferSize:
-            for actBufSize in self.ui.act_jack_bf_list:
-                actBufSize.blockSignals(True)
-                actBufSize.setEnabled(True)
-
-                if actBufSize.text().replace("&", "") == str(bufferSize):
-                    actBufSize.setChecked(True)
-                else:
-                    actBufSize.setChecked(False)
-
-                actBufSize.blockSignals(False)
-
     def ui_setSampleRate(self, sampleRate, future=False):
         if self.fSampleRate == sampleRate:
             return
 
-        if future:
-            ask = QMessageBox.question(self, self.tr("Change Sample Rate"),
-                        self.tr("It's not possible to change Sample Rate while JACK is running.\n"
-                                "Do you want to change as soon as JACK stops?"), QMessageBox.Ok | QMessageBox.Cancel)
-
-            if ask == QMessageBox.Ok:
-                self.fNextSampleRate = sampleRate
-            else:
-                self.fNextSampleRate = 0.0
-
-        # not future
-        else:
-            self.fSampleRate     = sampleRate
-            self.fNextSampleRate = 0.0
-
-        for i in range(len(SAMPLE_RATE_LIST)):
-            sampleRateI = SAMPLE_RATE_LIST[i]
-
-            if self.fSampleRate == sampleRateI:
-                self.ui.cb_sample_rate.blockSignals(True)
-                self.ui.cb_sample_rate.setCurrentIndex(i)
-                self.ui.cb_sample_rate.blockSignals(False)
-                break
+        self.fSampleRate = sampleRate
+        self.ui.cb_sample_rate.blockSignals(True)
+        self.ui.cb_sample_rate.clear()
+        self.ui.cb_sample_rate.addItem(str(sampleRate))
+        self.ui.cb_sample_rate.setCurrentIndex(0)
+        self.ui.cb_sample_rate.blockSignals(False)
 
     def ui_setRealTime(self, isRealtime):
         self.ui.label_realtime.setText(" RT " if isRealtime else " <s>RT</s> ")

@@ -68,9 +68,6 @@ class SettingsW(QDialog):
             self.ui.cb_canvas_use_opengl.setChecked(False)
             self.ui.cb_canvas_use_opengl.setEnabled(False)
 
-        self.ui.lw_page.item(0, 0).setIcon(getIcon(appName, 48))
-        self.ui.label_icon_main.setPixmap(getIcon(appName, 48).pixmap(48, 48))
-
         # -------------------------------------------------------------
         # Set-up connections
 

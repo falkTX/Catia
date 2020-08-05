@@ -24,16 +24,6 @@ from shared_canvasjack import *
 from shared_settings import *
 
 # ------------------------------------------------------------------------------------------------------------
-# Try Import DBus
-
-try:
-    import dbus
-    from dbus.mainloop.pyqt5 import DBusQtMainLoop
-    haveDBus = True
-except:
-    haveDBus = False
-
-# ------------------------------------------------------------------------------------------------------------
 # Try Import OpenGL
 
 try:
@@ -43,40 +33,10 @@ except:
     hasGL = False
 
 # ------------------------------------------------------------------------------------------------------------
-# Check for ALSA-MIDI
-
-haveALSA = False
-
-if LINUX:
-    for iPATH in PATH:
-        if not os.path.exists(os.path.join(iPATH, "aconnect")):
-            continue
-
-        from subprocess import getoutput
-        haveALSA = True
-
-        if DEBUG:
-            print("Using experimental ALSA-MIDI support")
-        break
-
-haveALSA = False
-
-# ------------------------------------------------------------------------------------------------------------
-# Global Variables
-
-global gA2JClientName
-gA2JClientName = None
-
-# ------------------------------------------------------------------------------------------------------------
 # Static Variables
-
-GROUP_TYPE_NULL = 0
-GROUP_TYPE_ALSA = 1
-GROUP_TYPE_JACK = 2
 
 iGroupId   = 0
 iGroupName = 1
-iGroupType = 2
 
 iPortId        = 0
 iPortName      = 1
@@ -150,24 +110,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         for bufferSize in BUFFER_SIZE_LIST:
             self.ui.cb_buffer_size.addItem(str(bufferSize))
 
-        for sampleRate in SAMPLE_RATE_LIST:
-            self.ui.cb_sample_rate.addItem(str(sampleRate))
-
-        self.ui.act_jack_bf_list = (self.ui.act_jack_bf_16,
-                                    self.ui.act_jack_bf_32,
-                                    self.ui.act_jack_bf_64,
-                                    self.ui.act_jack_bf_128,
-                                    self.ui.act_jack_bf_256,
-                                    self.ui.act_jack_bf_512,
-                                    self.ui.act_jack_bf_1024,
-                                    self.ui.act_jack_bf_2048,
-                                    self.ui.act_jack_bf_4096,
-                                    self.ui.act_jack_bf_8192)
-
-        if not haveALSA:
-            self.ui.act_settings_show_alsa.setChecked(False)
-            self.ui.act_settings_show_alsa.setEnabled(False)
-
         # -------------------------------------------------------------
         # Set-up Canvas
 
@@ -201,30 +143,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         # -------------------------------------------------------------
         # Try to connect to jack
 
-        if self.jackStarted():
-            self.initAlsaPorts()
-
-        # -------------------------------------------------------------
-        # Check DBus
-
-        if haveDBus:
-            if gDBus.a2j:
-                if gDBus.a2j.is_started():
-                    self.a2jStarted()
-                else:
-                    self.a2jStopped()
-            else:
-                self.ui.act_tools_a2j_start.setEnabled(False)
-                self.ui.act_tools_a2j_stop.setEnabled(False)
-                self.ui.act_tools_a2j_export_hw.setEnabled(False)
-                self.ui.menu_A2J_Bridge.setEnabled(False)
-
-        else:
-            # No DBus
-            self.ui.act_tools_a2j_start.setEnabled(False)
-            self.ui.act_tools_a2j_stop.setEnabled(False)
-            self.ui.act_tools_a2j_export_hw.setEnabled(False)
-            self.ui.menu_A2J_Bridge.setEnabled(False)
+        self.jackStarted()
 
         # -------------------------------------------------------------
         # Set-up Timers
@@ -250,19 +169,7 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         self.ui.act_jack_clear_xruns.triggered.connect(self.slot_JackClearXruns)
         self.ui.cb_buffer_size.currentIndexChanged[str].connect(self.slot_jackBufferSize_ComboBox)
-        self.ui.cb_sample_rate.currentIndexChanged[str].connect(self.slot_jackSampleRate_ComboBox)
         self.ui.b_xruns.clicked.connect(self.slot_JackClearXruns)
-
-        self.ui.act_jack_bf_16.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_32.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_64.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_128.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_256.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_512.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_1024.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_2048.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_4096.triggered.connect(self.slot_jackBufferSize_Menu)
-        self.ui.act_jack_bf_8192.triggered.connect(self.slot_jackBufferSize_Menu)
 
         self.ui.act_transport_play.triggered.connect(self.slot_transportPlayPause)
         self.ui.act_transport_stop.triggered.connect(self.slot_transportStop)
@@ -274,11 +181,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.ui.b_transport_forwards.clicked.connect(self.slot_transportForwards)
         self.ui.label_time.customContextMenuRequested.connect(self.slot_transportViewMenu)
 
-        self.ui.act_tools_a2j_start.triggered.connect(self.slot_A2JBridgeStart)
-        self.ui.act_tools_a2j_stop.triggered.connect(self.slot_A2JBridgeStop)
-        self.ui.act_tools_a2j_export_hw.triggered.connect(self.slot_A2JBridgeExportHW)
-
-        self.ui.act_settings_show_alsa.triggered.connect(self.slot_showAlsaMIDI)
         self.ui.act_configure.triggered.connect(self.slot_configureCatia)
 
         self.ui.act_help_about.triggered.connect(self.slot_aboutCatia)
@@ -293,13 +195,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.PortRenameCallback.connect(self.slot_PortRenameCallback)
         self.PropertyChangeCallback.connect(self.slot_PropertyChangeCallback)
         self.ShutdownCallback.connect(self.slot_ShutdownCallback)
-
-        # -------------------------------------------------------------
-        # Set-up DBus
-
-        if gDBus.a2j:
-            gDBus.bus.add_signal_receiver(self.DBusSignalReceiver, destination_keyword="dest", path_keyword="path",
-                member_keyword="member", interface_keyword="interface", sender_keyword="sender")
 
         # -------------------------------------------------------------
 
@@ -321,8 +216,8 @@ class CatiaMainW(AbstractCanvasJackClass):
         elif action == patchcanvas.ACTION_GROUP_POSITION:
             groupId = value1
             x1, y1, x2, y2 = tuple(int(i) for i in valueStr.split(":"))
-            groupName, groupType = self.canvas_getGroupNameAndType(groupId)
-            if groupType != GROUP_TYPE_JACK:
+            groupName = self.canvas_getGroupName(groupId)
+            if not groupName:
                 return
             uuidstr = jacklib.get_uuid_for_client_name(gJack.client, groupName)
             if uuidstr is None:
@@ -341,109 +236,74 @@ class CatiaMainW(AbstractCanvasJackClass):
             else:
                 return
 
-            if portNameR.startswith("[ALSA-"):
-                portId, portName = portNameR.split("] ", 1)[1].split(" ", 1)
+            portPtr   = jacklib.port_by_name(gJack.client, portNameR)
+            portFlags = jacklib.port_flags(portPtr)
+            groupName = portNameR.split(":", 1)[0]
+            portShortName = jacklib.port_short_name(portPtr)
 
-                flags = []
-                if portNameR.startswith("[ALSA-Input] "):
-                    flags.append(self.tr("Input"))
-                elif portNameR.startswith("[ALSA-Output] "):
-                    flags.append(self.tr("Output"))
-
-                flagsText = " | ".join(flags)
-                typeText  = self.tr("ALSA MIDI")
-
-                info = self.tr(""
-                              "<table>"
-                              "<tr><td align='right'><b>Group Name:</b></td><td>&nbsp;%s</td></tr>"
-                              "<tr><td align='right'><b>Port Id:</b></td><td>&nbsp;%s</td></tr>"
-                              "<tr><td align='right'><b>Port Name:</b></td><td>&nbsp;%s</td></tr>"
-                              "<tr><td colspan='2'>&nbsp;</td></tr>"
-                              "<tr><td align='right'><b>Port Flags:</b></td><td>&nbsp;%s</td></tr>"
-                              "<tr><td align='right'><b>Port Type:</b></td><td>&nbsp;%s</td></tr>"
-                              "</table>" % (portNameG, portId, portName, flagsText, typeText))
-
+            aliases = jacklib.port_get_aliases(portPtr)
+            if aliases[0] == 1:
+                alias1text = aliases[1]
+                alias2text = "(none)"
+            elif aliases[0] == 2:
+                alias1text = aliases[1]
+                alias2text = aliases[2]
             else:
-                portPtr   = jacklib.port_by_name(gJack.client, portNameR)
-                portFlags = jacklib.port_flags(portPtr)
-                groupName = portNameR.split(":", 1)[0]
-                portShortName = jacklib.port_short_name(portPtr)
+                alias1text = "(none)"
+                alias2text = "(none)"
 
-                aliases = jacklib.port_get_aliases(portPtr)
-                if aliases[0] == 1:
-                    alias1text = aliases[1]
-                    alias2text = "(none)"
-                elif aliases[0] == 2:
-                    alias1text = aliases[1]
-                    alias2text = aliases[2]
-                else:
-                    alias1text = "(none)"
-                    alias2text = "(none)"
+            flags = []
+            if portFlags & jacklib.JackPortIsInput:
+                flags.append(self.tr("Input"))
+            if portFlags & jacklib.JackPortIsOutput:
+                flags.append(self.tr("Output"))
+            if portFlags & jacklib.JackPortIsPhysical:
+                flags.append(self.tr("Physical"))
+            if portFlags & jacklib.JackPortCanMonitor:
+                flags.append(self.tr("Can Monitor"))
+            if portFlags & jacklib.JackPortIsTerminal:
+                flags.append(self.tr("Terminal"))
 
-                flags = []
-                if portFlags & jacklib.JackPortIsInput:
-                    flags.append(self.tr("Input"))
-                if portFlags & jacklib.JackPortIsOutput:
-                    flags.append(self.tr("Output"))
-                if portFlags & jacklib.JackPortIsPhysical:
-                    flags.append(self.tr("Physical"))
-                if portFlags & jacklib.JackPortCanMonitor:
-                    flags.append(self.tr("Can Monitor"))
-                if portFlags & jacklib.JackPortIsTerminal:
-                    flags.append(self.tr("Terminal"))
+            flagsText = " | ".join(flags)
 
-                flagsText = " | ".join(flags)
+            portTypeStr = jacklib.port_type(portPtr)
+            if portTypeStr == jacklib.JACK_DEFAULT_AUDIO_TYPE:
+                typeText = self.tr("JACK Audio")
+            elif portTypeStr == jacklib.JACK_DEFAULT_MIDI_TYPE:
+                typeText = self.tr("JACK MIDI")
+            else:
+                typeText = self.tr("Unknown")
 
-                portTypeStr = jacklib.port_type(portPtr)
-                if portTypeStr == jacklib.JACK_DEFAULT_AUDIO_TYPE:
-                    typeText = self.tr("JACK Audio")
-                elif portTypeStr == jacklib.JACK_DEFAULT_MIDI_TYPE:
-                    typeText = self.tr("JACK MIDI")
-                else:
-                    typeText = self.tr("Unknown")
+            portLatency      = jacklib.port_get_latency(portPtr)
+            portTotalLatency = jacklib.port_get_total_latency(gJack.client, portPtr)
+            latencyText      = self.tr("%.1f ms (%i frames)" % (portLatency * 1000 / int(self.fSampleRate), portLatency))
+            latencyTotalText = self.tr("%.1f ms (%i frames)" % (portTotalLatency * 1000 / int(self.fSampleRate), portTotalLatency))
 
-                portLatency      = jacklib.port_get_latency(portPtr)
-                portTotalLatency = jacklib.port_get_total_latency(gJack.client, portPtr)
-                latencyText      = self.tr("%.1f ms (%i frames)" % (portLatency * 1000 / int(self.fSampleRate), portLatency))
-                latencyTotalText = self.tr("%.1f ms (%i frames)" % (portTotalLatency * 1000 / int(self.fSampleRate), portTotalLatency))
-
-                info = self.tr(""
-                               "<table>"
-                               "<tr><td align='right'><b>Group Name:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td align='right'><b>Port Name:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td align='right'><b>Full Port Name:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td align='right'><b>Port Alias #1:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td align='right'><b>Port Alias #2:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td colspan='2'>&nbsp;</td></tr>"
-                               "<tr><td align='right'><b>Port Flags:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td align='right'><b>Port Type:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td colspan='2'>&nbsp;</td></tr>"
-                               "<tr><td align='right'><b>Port Latency:</b></td><td>&nbsp;%s</td></tr>"
-                               "<tr><td align='right'><b>Total Port Latency:</b></td><td>&nbsp;%s</td></tr>"
-                               "</table>" % (groupName, portShortName, portNameR, alias1text, alias2text, flagsText, typeText, latencyText, latencyTotalText))
+            info = self.tr(""
+                           "<table>"
+                           "<tr><td align='right'><b>Group Name:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td align='right'><b>Port Name:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td align='right'><b>Full Port Name:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td align='right'><b>Port Alias #1:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td align='right'><b>Port Alias #2:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td colspan='2'>&nbsp;</td></tr>"
+                           "<tr><td align='right'><b>Port Flags:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td align='right'><b>Port Type:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td colspan='2'>&nbsp;</td></tr>"
+                           "<tr><td align='right'><b>Port Latency:</b></td><td>&nbsp;%s</td></tr>"
+                           "<tr><td align='right'><b>Total Port Latency:</b></td><td>&nbsp;%s</td></tr>"
+                           "</table>" % (groupName, portShortName, portNameR, alias1text, alias2text, flagsText, typeText, latencyText, latencyTotalText))
 
             QMessageBox.information(self, self.tr("Port Information"), info)
 
         elif action == patchcanvas.ACTION_PORT_RENAME:
-            global gA2JClientName
-
             portId = value1
             portShortName = asciiString(valueStr)
 
             for port in self.fPortList:
                 if port[iPortId] == portId:
                     portNameR = port[iPortNameR]
-
-                    if portNameR.startswith("[ALSA-"):
-                        QMessageBox.warning(self, self.tr("Cannot continue"), self.tr(""
-                            "Rename functions rely on JACK aliases and cannot be done in ALSA ports"))
-                        return
-
-                    if False and portNameR.split(":", 1)[0] == gA2JClientName:
-                        a2jSplit = portNameR.split(":", 3)
-                        portName = "%s:%s: %s" % (a2jSplit[0], a2jSplit[1], portShortName)
-                    else:
-                        portName = "%s:%s" % (port[iPortGroupName], portShortName)
+                    portName = "%s:%s" % (port[iPortGroupName], portShortName)
                     break
             else:
                 return
@@ -481,14 +341,7 @@ class CatiaMainW(AbstractCanvasJackClass):
                 elif port[iPortGroupId] == gIn and port[iPortId] == pIn:
                     portRealNameIn = port[iPortNameR]
 
-            if portRealNameOut.startswith("[ALSA-"):
-                portRealNameOut = portRealNameOut.split(" ", 2)[1]
-                portRealNameIn = portRealNameIn.split(" ", 2)[1]
-
-                if os.system("aconnect %s %s" % (portRealNameOut, portRealNameIn)) == 0:
-                    self.canvas_connectPorts(gOut, pOut, gIn, pIn)
-
-            elif portRealNameOut and portRealNameIn:
+            if portRealNameOut and portRealNameIn:
                 jacklib.connect(gJack.client, portRealNameOut, portRealNameIn)
 
         elif action == patchcanvas.ACTION_PORTS_DISCONNECT:
@@ -510,14 +363,7 @@ class CatiaMainW(AbstractCanvasJackClass):
                 elif port[iPortGroupId] == gIn and port[iPortId] == pIn:
                     portRealNameIn = port[iPortNameR]
 
-            if portRealNameOut.startswith("[ALSA-"):
-                portRealNameOut = portRealNameOut.split(" ", 2)[1]
-                portRealNameIn = portRealNameIn.split(" ", 2)[1]
-
-                if os.system("aconnect -d %s %s" % (portRealNameOut, portRealNameIn)) == 0:
-                    self.canvas_disconnectPorts(gOut, pOut, gIn, pIn)
-
-            elif portRealNameOut and portRealNameIn:
+            if portRealNameOut and portRealNameIn:
                 jacklib.disconnect(gJack.client, portRealNameOut, portRealNameIn)
 
     def initPorts(self):
@@ -531,7 +377,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.fLastConnectionId = 1
 
         self.initJackPorts()
-        self.initAlsaPorts()
 
     def initJack(self):
         self.fXruns = 0
@@ -576,23 +421,8 @@ class CatiaMainW(AbstractCanvasJackClass):
         if not gJack.client:
             return
 
-        global gA2JClientName
-
-        # Get all jack ports, put a2j ones to the bottom of the list
-        a2jNameList  = []
+        # Get all jack ports
         portNameList = c_char_p_p_to_list(jacklib.get_ports(gJack.client, "", "", 0))
-
-        h = 0
-        for i in range(len(portNameList)):
-            if False and portNameList[i - h].split(":")[0] == gA2JClientName:
-                portName = portNameList.pop(i - h)
-                a2jNameList.append(portName)
-                h += 1
-
-        for a2jName in a2jNameList:
-            portNameList.append(a2jName)
-
-        del a2jNameList
 
         # Add jack ports
         for portName in portNameList:
@@ -613,162 +443,17 @@ class CatiaMainW(AbstractCanvasJackClass):
                 for portConName in portConnectionNames:
                     self.canvas_connectPortsByName(portName, portConName)
 
-    def initAlsaPorts(self):
-        if not (haveALSA and self.ui.act_settings_show_alsa.isChecked()):
-            return
-
-        # Get ALSA MIDI ports (outputs)
-        output = getoutput("env LANG=C LC_ALL=C aconnect -i").split("\n")
-        lastGroupId   = -1
-        lastGroupName = ""
-
-        for line in output:
-            # Make 'System' match JACK's 'system'
-            if line == "client 0: 'System' [type=kernel]":
-                line = "client 0: 'system' [type=kernel]"
-
-            if line.startswith("client "):
-                lineSplit  = line.split(": ", 1)
-                lineSplit2 = lineSplit[1].replace("'", "", 1).split("' [type=", 1)
-                groupId    = int(lineSplit[0].replace("client ", ""))
-                groupName  = lineSplit2[0]
-                groupType  = lineSplit2[1].rsplit("]", 1)[0]
-
-                lastGroupId = self.canvas_getGroupId(groupName)
-
-                if lastGroupId == -1:
-                    # Group doesn't exist yet
-                    lastGroupId = self.canvas_addAlsaGroup(groupId, groupName, bool(groupType == "kernel"))
-
-                lastGroupName = groupName
-
-            elif line.startswith("   ") and lastGroupId >= 0 and lastGroupName:
-                lineSplit = line.split(" '", 1)
-                portId    = int(lineSplit[0].strip())
-                portName  = lineSplit[1].rsplit("'", 1)[0].strip()
-
-                self.canvas_addAlsaPort(lastGroupId, lastGroupName, portName, "%i:%i %s" % (groupId, portId, portName), False)
-
-            else:
-                lastGroupId   = -1
-                lastGroupName = ""
-
-        # Get ALSA MIDI ports (inputs)
-        output = getoutput("env LANG=C LC_ALL=C aconnect -o").split("\n")
-        lastGroupId   = -1
-        lastGroupName = ""
-
-        for line in output:
-            # Make 'System' match JACK's 'system'
-            if line == "client 0: 'System' [type=kernel]":
-                line = "client 0: 'system' [type=kernel]"
-
-            if line.startswith("client "):
-                lineSplit  = line.split(": ", 1)
-                lineSplit2 = lineSplit[1].replace("'", "", 1).split("' [type=", 1)
-                groupId    = int(lineSplit[0].replace("client ", ""))
-                groupName  = lineSplit2[0]
-                groupType  = lineSplit2[1].rsplit("]", 1)[0]
-
-                lastGroupId = self.canvas_getGroupId(groupName)
-
-                if lastGroupId == -1:
-                    # Group doesn't exist yet
-                    lastGroupId = self.canvas_addAlsaGroup(groupId, groupName, bool(groupType == "kernel"))
-
-                lastGroupName = groupName
-
-            elif line.startswith("   ") and lastGroupId >= 0 and lastGroupName:
-                lineSplit = line.split(" '", 1)
-                portId    = int(lineSplit[0].strip())
-                portName  = lineSplit[1].rsplit("'", 1)[0].strip()
-
-                self.canvas_addAlsaPort(lastGroupId, lastGroupName, portName, "%i:%i %s" % (groupId, portId, portName), True)
-
-            else:
-                lastGroupId   = -1
-                lastGroupName = ""
-
-        # Get ALSA MIDI connections
-        output = getoutput("env LANG=C LC_ALL=C aconnect -ol").split("\n")
-        lastGroupId = -1
-        lastPortId  = -1
-
-        for line in output:
-            # Make 'System' match JACK's 'system'
-            if line == "client 0: 'System' [type=kernel]":
-                line = "client 0: 'system' [type=kernel]"
-
-            if line.startswith("client "):
-                lineSplit  = line.split(": ", 1)
-                lineSplit2 = lineSplit[1].replace("'", "", 1).split("' [type=", 1)
-                groupId    = int(lineSplit[0].replace("client ", ""))
-                groupName  = lineSplit2[0]
-
-                lastGroupId = self.canvas_getGroupId(groupName)
-
-            elif line.startswith("    ") and lastGroupId >= 0:
-                lineSplit = line.split(" '", 1)
-                portId    = int(lineSplit[0].strip())
-                portName  = lineSplit[1].rsplit("'", 1)[0].strip()
-
-                for port in self.fPortList:
-                    if port[iPortNameR] == "[ALSA-Input] %i:%i %s" % (groupId, portId, portName):
-                        lastPortId = port[iPortId]
-                        break
-                else:
-                    lastPortId = -1
-
-            elif line.startswith("\tConnect") and lastGroupId >= 0 and lastPortId >= 0:
-                if line.startswith("\tConnected From"):
-                    lineSplit = line.split(": ", 1)[1]
-                    lineConns = lineSplit.split(", ")
-
-                    for lineConn in lineConns:
-                        lineConnSplit = lineConn.replace("'","").split(":", 1)
-                        alsaGroupId   = int(lineConnSplit[0].split("[real:",1)[0])
-                        alsaPortId    = int(lineConnSplit[1].split("[real:",1)[0])
-
-                        portNameRtest = "[ALSA-Output] %i:%i " % (alsaGroupId, alsaPortId)
-
-                        for port in self.fPortList:
-                            if port[iPortNameR].startswith(portNameRtest):
-                                self.canvas_connectPorts(port[iPortId], lastPortId)
-                                break
-
-            else:
-                lastGroupId = -1
-                lastPortId  = -1
-
     def canvas_getGroupId(self, groupName):
         for group in self.fGroupList:
             if group[iGroupName] == groupName:
                 return group[iGroupId]
         return -1
 
-    def canvas_getGroupNameAndType(self, groupId):
+    def canvas_getGroupName(self, groupId):
         for group in self.fGroupList:
             if group[iGroupId] == groupId:
-                return group[iGroupName], group[iGroupType]
-        return "", GROUP_TYPE_NULL
-
-    def canvas_addAlsaGroup(self, alsaGroupId, groupName, hwSplit):
-        groupId = self.fLastGroupId
-
-        if hwSplit:
-            patchcanvas.addGroup(groupId, groupName, patchcanvas.SPLIT_YES, patchcanvas.ICON_HARDWARE)
-        else:
-            patchcanvas.addGroup(groupId, groupName)
-
-        groupObj = [None, None, None]
-        groupObj[iGroupId]   = groupId
-        groupObj[iGroupName] = groupName
-        groupObj[iGroupType] = GROUP_TYPE_ALSA
-
-        self.fGroupList.append(groupObj)
-        self.fLastGroupId += 1
-
-        return groupId
+                return group[iGroupName]
+        return ""
 
     def canvas_addJackGroup(self, groupName):
         props = jacklib.get_client_properties(gJack.client, groupName)
@@ -811,10 +496,9 @@ class CatiaMainW(AbstractCanvasJackClass):
                 patchcanvas.joinGroup(groupId)
             patchcanvas.setGroupPosFull(groupId, x1, y1, x2, y2)
 
-        groupObj = [None, None, None]
+        groupObj = [None, None]
         groupObj[iGroupId]   = groupId
         groupObj[iGroupName] = groupName
-        groupObj[iGroupType] = GROUP_TYPE_JACK
 
         self.fGroupList.append(groupObj)
         self.fLastGroupId += 1
@@ -834,28 +518,7 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         patchcanvas.removeGroup(groupId)
 
-    def canvas_addAlsaPort(self, groupId, groupName, portName, portNameR, isPortInput):
-        portId   = self.fLastPortId
-        portMode = patchcanvas.PORT_MODE_INPUT if isPortInput else patchcanvas.PORT_MODE_OUTPUT
-        portType = patchcanvas.PORT_TYPE_MIDI_ALSA
-
-        patchcanvas.addPort(groupId, portId, portName, portMode, portType)
-
-        portObj = [None, None, None, None, None]
-        portObj[iPortId]        = portId
-        portObj[iPortName]      = portName
-        portObj[iPortNameR]     = "[ALSA-%s] %s" % ("Input" if isPortInput else "Output", portNameR)
-        portObj[iPortGroupId]   = groupId
-        portObj[iPortGroupName] = groupName
-
-        self.fPortList.append(portObj)
-        self.fLastPortId += 1
-
-        return portId
-
     def canvas_addJackPort(self, portPtr, portName):
-        global gA2JClientName
-
         portId  = self.fLastPortId
         groupId = -1
 
@@ -879,21 +542,15 @@ class CatiaMainW(AbstractCanvasJackClass):
         else:
             portMode = patchcanvas.PORT_MODE_NULL
 
-        if False and groupName == gA2JClientName:
-            portType  = patchcanvas.PORT_TYPE_MIDI_JACK
-            groupName = portName.replace("%s:" % gA2JClientName, "", 1).split(" [", 1)[0]
-            portShortName = portName.split("): ", 1)[1]
+        portShortName = portName.replace("%s:" % groupName, "", 1)
 
+        portTypeStr = jacklib.port_type(portPtr)
+        if portTypeStr == jacklib.JACK_DEFAULT_AUDIO_TYPE:
+            portType = patchcanvas.PORT_TYPE_AUDIO_JACK
+        elif portTypeStr == jacklib.JACK_DEFAULT_MIDI_TYPE:
+            portType = patchcanvas.PORT_TYPE_MIDI_JACK
         else:
-            portShortName = portName.replace("%s:" % groupName, "", 1)
-
-            portTypeStr = jacklib.port_type(portPtr)
-            if portTypeStr == jacklib.JACK_DEFAULT_AUDIO_TYPE:
-                portType = patchcanvas.PORT_TYPE_AUDIO_JACK
-            elif portTypeStr == jacklib.JACK_DEFAULT_MIDI_TYPE:
-                portType = patchcanvas.PORT_TYPE_MIDI_JACK
-            else:
-                portType = patchcanvas.PORT_TYPE_NULL
+            portType = patchcanvas.PORT_TYPE_NULL
 
         for group in self.fGroupList:
             if group[iGroupName] == groupName:
@@ -1023,7 +680,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.menuJackTransport(True)
 
         self.ui.cb_buffer_size.setEnabled(True)
-        self.ui.cb_sample_rate.setEnabled(False) # TODO remove
+        self.ui.cb_sample_rate.setEnabled(True)
 
         self.ui.pb_dsp_load.setMaximum(100)
         self.ui.pb_dsp_load.setValue(0)
@@ -1034,9 +691,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         return True
 
     def jackStopped(self):
-        if haveDBus:
-            self.DBusReconnect()
-
         # client already closed
         gJack.client = None
 
@@ -1061,12 +715,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.ui.pb_dsp_load.setMaximum(0)
         self.ui.pb_dsp_load.update()
 
-    def a2jStarted(self):
-        self.menuA2JBridge(True)
-
-    def a2jStopped(self):
-        self.menuA2JBridge(False)
-
     def menuJackTransport(self, enabled):
         self.ui.act_transport_play.setEnabled(enabled)
         self.ui.act_transport_stop.setEnabled(enabled)
@@ -1074,47 +722,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.ui.act_transport_forwards.setEnabled(enabled)
         self.ui.menu_Transport.setEnabled(enabled)
         self.ui.group_transport.setEnabled(enabled)
-
-    def menuA2JBridge(self, started):
-        if gJack.client:
-            self.ui.act_tools_a2j_start.setEnabled(not started)
-            self.ui.act_tools_a2j_stop.setEnabled(started)
-            self.ui.act_tools_a2j_export_hw.setEnabled(not started)
-        else:
-            self.ui.act_tools_a2j_start.setEnabled(False)
-            self.ui.act_tools_a2j_stop.setEnabled(False)
-            self.ui.act_tools_a2j_export_hw.setEnabled(bool(gDBus.a2j) and not gDBus.a2j.is_started())
-
-    def DBusSignalReceiver(self, *args, **kwds):
-        if kwds["interface"] == "org.freedesktop.DBus" and kwds["path"] == "/org/freedesktop/DBus" and kwds["member"] == "NameOwnerChanged":
-            appInterface, appId, newId = args
-
-            if not newId:
-                # Something crashed
-                if appInterface == "org.gna.home.a2jmidid":
-                    QTimer.singleShot(0, self.slot_handleCrash_a2j)
-                elif appInterface == "org.jackaudio.service":
-                    QTimer.singleShot(0, self.slot_handleCrash_jack)
-
-        elif kwds['interface'] == "org.jackaudio.JackControl":
-            if kwds['member'] == "ServerStarted":
-                self.jackStarted()
-            elif kwds['member'] == "ServerStopped":
-                self.jackStopped()
-        elif kwds['interface'] == "org.gna.home.a2jmidid.control":
-            if kwds['member'] == "bridge_started":
-                self.a2jStarted()
-            elif kwds['member'] == "bridge_stopped":
-                self.a2jStopped()
-
-    def DBusReconnect(self):
-        global gA2JClientName
-        try:
-            gDBus.a2j = dbus.Interface(gDBus.bus.get_object("org.gna.home.a2jmidid", "/"), "org.gna.home.a2jmidid.control")
-            gA2JClientName = str(gDBus.a2j.get_jack_client_name())
-        except:
-            gDBus.a2j = None
-            gA2JClientName = None
 
     def JackXRunCallback(self, arg):
         if DEBUG: print("JackXRunCallback()")
@@ -1161,40 +768,11 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.ShutdownCallback.emit()
         return 0
 
-    @pyqtSlot(bool)
-    def slot_showAlsaMIDI(self, yesNo):
-        # refresh canvas (remove jack ports)
-        patchcanvas.clear()
-        self.initPorts()
-
     @pyqtSlot()
     def slot_JackClearXruns(self):
         if gJack.client:
             self.fXruns = 0
             self.ui_setXruns(0)
-
-    @pyqtSlot()
-    def slot_A2JBridgeStart(self):
-        ret = False
-        if gDBus.a2j:
-            ret = bool(gDBus.a2j.start())
-        return ret
-
-    @pyqtSlot()
-    def slot_A2JBridgeStop(self):
-        ret = False
-        if gDBus.a2j:
-            ret = bool(gDBus.a2j.stop())
-        return ret
-
-    @pyqtSlot()
-    def slot_A2JBridgeExportHW(self):
-        if gDBus.a2j:
-            ask = QMessageBox.question(self, self.tr("A2J Hardware Export"), self.tr("Enable Hardware Export on the A2J Bridge?"), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.No)
-            if ask == QMessageBox.Yes:
-                gDBus.a2j.set_hw_export(True)
-            elif ask == QMessageBox.No:
-                gDBus.a2j.set_hw_export(False)
 
     @pyqtSlot()
     def slot_XRunCallback(self):
@@ -1300,45 +878,6 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.jackStopped()
 
     @pyqtSlot()
-    def slot_handleCrash_a2j(self):
-        global gA2JClientName
-
-        try:
-            gDBus.a2j = dbus.Interface(gDBus.bus.get_object("org.gna.home.a2jmidid", "/"), "org.gna.home.a2jmidid.control")
-            gA2JClientName = str(gDBus.a2j.get_jack_client_name())
-        except:
-            gDBus.a2j = None
-            gA2JClientName = None
-
-        if gDBus.a2j:
-            if gDBus.a2j.is_started():
-                self.a2jStarted()
-            else:
-                self.a2jStopped()
-        else:
-            self.ui.act_tools_a2j_start.setEnabled(False)
-            self.ui.act_tools_a2j_stop.setEnabled(False)
-            self.ui.act_tools_a2j_export_hw.setEnabled(False)
-            self.ui.menu_A2J_Bridge.setEnabled(False)
-
-    @pyqtSlot()
-    def slot_handleCrash_jack(self):
-        self.DBusReconnect()
-
-        if gDBus.a2j:
-            if gDBus.a2j.is_started():
-                self.a2jStarted()
-            else:
-                self.a2jStopped()
-        else:
-            self.ui.act_tools_a2j_start.setEnabled(False)
-            self.ui.act_tools_a2j_stop.setEnabled(False)
-            self.ui.act_tools_a2j_export_hw.setEnabled(False)
-            self.ui.menu_A2J_Bridge.setEnabled(False)
-
-        self.jackStopped()
-
-    @pyqtSlot()
     def slot_configureCatia(self):
         dialog = SettingsW(self, "catia", hasGL)
         if dialog.exec_():
@@ -1371,14 +910,13 @@ class CatiaMainW(AbstractCanvasJackClass):
     def slot_aboutCatia(self):
         QMessageBox.about(self, self.tr("About Catia"), self.tr("<h3>Catia</h3>"
                                                                 "<br>Version %s"
-                                                                "<br>Catia is a nice JACK Patchbay with A2J Bridge integration.<br>"
-                                                                "<br>Copyright (C) 2010-2018 falkTX" % VERSION))
+                                                                "<br>Catia is a simple JACK Patchbay.<br>"
+                                                                "<br>Copyright (C) 2010-2020 falkTX" % VERSION))
 
     def saveSettings(self):
         settings = QSettings()
 
         settings.setValue("Geometry", self.saveGeometry())
-        settings.setValue("ShowAlsaMIDI", self.ui.act_settings_show_alsa.isChecked())
         settings.setValue("ShowToolbar",  self.ui.act_settings_show_toolbar.isChecked())
         settings.setValue("ShowStatusbar", self.ui.act_settings_show_statusbar.isChecked())
         settings.setValue("TransportView", self.fCurTransportView)
@@ -1388,9 +926,6 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         if geometry:
             self.restoreGeometry(settings.value("Geometry", b""))
-
-            showAlsaMidi = settings.value("ShowAlsaMIDI", False, type=bool)
-            self.ui.act_settings_show_alsa.setChecked(showAlsaMidi)
 
             showToolbar = settings.value("ShowToolbar", True, type=bool)
             self.ui.act_settings_show_toolbar.setChecked(showToolbar)
@@ -1448,26 +983,6 @@ if __name__ == '__main__':
                              app.translate("CatiaMainW",
                                            "JACK is not available in this system, cannot use this application."))
         sys.exit(1)
-
-    if haveDBus:
-        gDBus.loop = DBusQtMainLoop(set_as_default=True)
-        gDBus.bus  = dbus.SessionBus(mainloop=gDBus.loop)
-
-        try:
-            gDBus.a2j = dbus.Interface(gDBus.bus.get_object("org.gna.home.a2jmidid", "/"), "org.gna.home.a2jmidid.control")
-            gA2JClientName = str(gDBus.a2j.get_jack_client_name())
-        except:
-            gDBus.a2j = None
-            gA2JClientName = None
-
-        if DEBUG and gDBus.a2j:
-            print("Using DBus for a2jmidid")
-
-    else:
-        gDBus.a2j = None
-        gA2JClientName = None
-        if DEBUG:
-            print("Not using DBus")
 
     # Init GUI
     gui = CatiaMainW()

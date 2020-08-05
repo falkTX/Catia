@@ -394,8 +394,10 @@
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
-     <string>&amp;File</string>
+     <string>&amp;Catia</string>
     </property>
+    <addaction name="act_jack_clear_xruns"/>
+    <addaction name="separator"/>
     <addaction name="act_quit"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -434,27 +436,10 @@
     <addaction name="separator"/>
     <addaction name="act_canvas_save_image"/>
    </widget>
-   <widget class="QMenu" name="menu_Tools">
-    <property name="title">
-     <string>&amp;Tools</string>
-    </property>
-    <widget class="QMenu" name="menu_A2J_Bridge">
-     <property name="title">
-      <string>&amp;ALSA-MIDI Bridge</string>
-     </property>
-     <addaction name="act_tools_a2j_start"/>
-     <addaction name="act_tools_a2j_stop"/>
-     <addaction name="act_tools_a2j_export_hw"/>
-    </widget>
-    <addaction name="menu_A2J_Bridge"/>
-    <addaction name="separator"/>
-    <addaction name="act_jack_clear_xruns"/>
-   </widget>
    <widget class="QMenu" name="menu_Settings">
     <property name="title">
      <string>S&amp;ettings</string>
     </property>
-    <addaction name="act_settings_show_alsa"/>
     <addaction name="act_settings_show_toolbar"/>
     <addaction name="act_settings_show_statusbar"/>
     <addaction name="separator"/>
@@ -463,7 +448,6 @@
    <addaction name="menu_File"/>
    <addaction name="menu_Transport"/>
    <addaction name="menu_Canvas"/>
-   <addaction name="menu_Tools"/>
    <addaction name="menu_Settings"/>
    <addaction name="menu_Help"/>
   </widget>
@@ -609,20 +593,11 @@
   </action>
   <action name="act_jack_clear_xruns">
    <property name="icon">
-    <iconset>
-     <normaloff>:/16x16/edit-clear.png</normaloff>:/16x16/edit-clear.png</iconset>
+    <iconset resource="../resources.qrc">
+     <normaloff>:/16x16/edit-clear.svgz</normaloff>:/16x16/edit-clear.svgz</iconset>
    </property>
    <property name="text">
     <string>Clear &amp;Xruns</string>
-   </property>
-  </action>
-  <action name="act_jack_configure">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/16x16/configure.png</normaloff>:/16x16/configure.png</iconset>
-   </property>
-   <property name="text">
-    <string>Configure JACK</string>
    </property>
   </action>
   <action name="act_settings_show_toolbar">
@@ -653,131 +628,6 @@
     <string>Ctrl+P</string>
    </property>
   </action>
-  <action name="act_tools_jack_start">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/16x16/media-playback-start.png</normaloff>:/16x16/media-playback-start.png</iconset>
-   </property>
-   <property name="text">
-    <string>Start JACK Server</string>
-   </property>
-   <property name="shortcut">
-    <string>F5</string>
-   </property>
-  </action>
-  <action name="act_tools_jack_stop">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/16x16/media-playback-stop.png</normaloff>:/16x16/media-playback-stop.png</iconset>
-   </property>
-   <property name="text">
-    <string>Stop JACK Server</string>
-   </property>
-   <property name="shortcut">
-    <string>F6</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_32">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>32</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_64">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>64</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_128">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>128</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_256">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>256</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_512">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>512</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_1024">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>1024</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_2048">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>2048</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_4096">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>4096</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_8192">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>8192</string>
-   </property>
-  </action>
-  <action name="act_tools_a2j_start">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/16x16/media-playback-start.png</normaloff>:/16x16/media-playback-start.png</iconset>
-   </property>
-   <property name="text">
-    <string>Start Bridge</string>
-   </property>
-   <property name="shortcut">
-    <string>F7</string>
-   </property>
-  </action>
-  <action name="act_tools_a2j_stop">
-   <property name="icon">
-    <iconset>
-     <normaloff>:/16x16/media-playback-stop.png</normaloff>:/16x16/media-playback-stop.png</iconset>
-   </property>
-   <property name="text">
-    <string>Stop Bridge</string>
-   </property>
-   <property name="shortcut">
-    <string>F8</string>
-   </property>
-  </action>
-  <action name="act_tools_a2j_export_hw">
-   <property name="text">
-    <string>Export Hardware Ports...</string>
-   </property>
-  </action>
   <action name="act_canvas_save_image">
    <property name="text">
     <string>Save &amp;Image...</string>
@@ -786,22 +636,6 @@
   <action name="act_help_about_qt">
    <property name="text">
     <string>About Qt</string>
-   </property>
-  </action>
-  <action name="act_jack_bf_16">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>16</string>
-   </property>
-  </action>
-  <action name="act_settings_show_alsa">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Show ALSA-MIDI (EXPERIMENTAL)</string>
    </property>
   </action>
  </widget>

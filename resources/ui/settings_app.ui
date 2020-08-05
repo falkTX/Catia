@@ -168,11 +168,26 @@
            </item>
            <item>
             <widget class="QLabel" name="label_icon_main">
+             <property name="minimumSize">
+              <size>
+               <width>48</width>
+               <height>48</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>48</width>
+               <height>48</height>
+              </size>
+             </property>
              <property name="text">
               <string notr="true"/>
              </property>
              <property name="pixmap">
-              <pixmap>:/48x48/exec.png</pixmap>
+              <pixmap resource="../resources.qrc">:/scalable/catia.svg</pixmap>
+             </property>
+             <property name="scaledContents">
+              <bool>true</bool>
              </property>
              <property name="alignment">
               <set>Qt::AlignHCenter|Qt::AlignTop</set>
@@ -308,11 +323,26 @@
            </item>
            <item>
             <widget class="QLabel" name="label_10">
+             <property name="minimumSize">
+              <size>
+               <width>48</width>
+               <height>48</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>48</width>
+               <height>48</height>
+              </size>
+             </property>
              <property name="text">
               <string notr="true"/>
              </property>
              <property name="pixmap">
-              <pixmap>:/48x48/canvas.png</pixmap>
+              <pixmap resource="../resources.qrc">:/scalable/canvas.svg</pixmap>
+             </property>
+             <property name="scaledContents">
+              <bool>true</bool>
              </property>
              <property name="alignment">
               <set>Qt::AlignHCenter|Qt::AlignTop</set>
