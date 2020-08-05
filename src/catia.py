@@ -88,7 +88,13 @@ iConnOutPort  = 2
 iConnInGroup  = 3
 iConnInPort   = 4
 
-URI_CANVAS_ICON = "http://kxstudio.sf.net/ns/canvas/icon"
+URI_MAIN_CLIENT_NAME = "https://kx.studio/ns/carla/main-client-name"
+URI_POSITION         = "https://kx.studio/ns/carla/position"
+URI_PLUGIN_ICON      = "https://kx.studio/ns/carla/plugin-icon"
+URI_PLUGIN_ID        = "https://kx.studio/ns/carla/plugin-id"
+
+URI_TYPE_INTEGER = "http://www.w3.org/2001/XMLSchema#integer"
+URI_TYPE_STRING  = "text/plain"
 
 # ------------------------------------------------------------------------------------------------------------
 # Catia Main Window
@@ -283,6 +289,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.PortRegistrationCallback.connect(self.slot_PortRegistrationCallback)
         self.PortConnectCallback.connect(self.slot_PortConnectCallback)
         self.PortRenameCallback.connect(self.slot_PortRenameCallback)
+        self.PropertyChangeCallback.connect(self.slot_PropertyChangeCallback)
         self.ShutdownCallback.connect(self.slot_ShutdownCallback)
 
         # -------------------------------------------------------------
@@ -550,6 +557,7 @@ class CatiaMainW(AbstractCanvasJackClass):
         jacklib.set_xrun_callback(gJack.client, self.JackXRunCallback, None)
         jacklib.set_port_registration_callback(gJack.client, self.JackPortRegistrationCallback, None)
         jacklib.set_port_connect_callback(gJack.client, self.JackPortConnectCallback, None)
+        jacklib.set_property_change_callback(gJack.client, self.JackPropertyChangeCallback, None)
         jacklib.on_shutdown(gJack.client, self.JackShutdownCallback, None)
 
         jacklib.set_client_rename_callback(gJack.client, self.JackClientRenameCallback, None)
@@ -748,29 +756,45 @@ class CatiaMainW(AbstractCanvasJackClass):
         return groupId
 
     def canvas_addJackGroup(self, groupName):
-        ret, data, dataSize = jacklib.custom_get_data(gJack.client, groupName, URI_CANVAS_ICON)
+        props = jacklib.get_client_properties(gJack.client, groupName)
 
         groupId    = self.fLastGroupId
         groupSplit = patchcanvas.SPLIT_UNDEF
         groupIcon  = patchcanvas.ICON_APPLICATION
+        groupPos   = ""
 
-        if ret == 0:
-            iconName = voidptr2str(data)
-            jacklib.free(data)
-
-            if iconName == "hardware":
-                groupSplit = patchcanvas.SPLIT_YES
-                groupIcon  = patchcanvas.ICON_HARDWARE
-            #elif iconName =="carla":
-                #groupIcon = patchcanvas.ICON_CARLA
-            elif iconName =="distrho":
-                groupIcon = patchcanvas.ICON_DISTRHO
-            elif iconName =="file":
-                groupIcon = patchcanvas.ICON_FILE
-            elif iconName =="plugin":
+        for prop in props:
+            if prop.key == URI_POSITION:
+                groupPos = prop.value
+            elif prop.key == URI_PLUGIN_ICON:
+                print("plugin icon is", prop.value)
+            elif prop.key == URI_PLUGIN_ID:
                 groupIcon = patchcanvas.ICON_PLUGIN
 
+            #if iconName == "hardware":
+                #groupSplit = patchcanvas.SPLIT_YES
+                #groupIcon  = patchcanvas.ICON_HARDWARE
+            ##elif iconName =="carla":
+                ##groupIcon = patchcanvas.ICON_CARLA
+            #elif iconName =="distrho":
+                #groupIcon = patchcanvas.ICON_DISTRHO
+            #elif iconName =="file":
+                #groupIcon = patchcanvas.ICON_FILE
+            #elif iconName =="plugin":
+                #groupIcon = patchcanvas.ICON_PLUGIN
+
+        if groupPos:
+            x1, y1, x2, y2 = tuple(int(v) for v in groupPos.split(":",4))
+            groupSplit = (x1 != 0 and x2 != 0) or (y1 != 0 and y2 != 0)
+
         patchcanvas.addGroup(groupId, groupName, groupSplit, groupIcon)
+
+        if groupPos:
+            if groupSplit:
+                patchcanvas.splitGroup(groupId)
+            else:
+                patchcanvas.joinGroup(groupId)
+            patchcanvas.setGroupPosFull(groupId, x1, y1, x2, y2)
 
         groupObj = [None, None, None]
         groupObj[iGroupId]   = groupId
@@ -1112,6 +1136,11 @@ class CatiaMainW(AbstractCanvasJackClass):
         self.PortRenameCallback.emit(portId, str(oldName, encoding="utf-8"), str(newName, encoding="utf-8"))
         return 0
 
+    def JackPropertyChangeCallback(self, uuid, key, change, arg):
+        if DEBUG: print("PropertyChangeCallback(%i, %s, %i)" % (uuid, key, change))
+        self.PropertyChangeCallback.emit(jacklib.jack_uuid_t(uuid), str(key, encoding="utf-8"), change)
+        return 0
+
     def JackShutdownCallback(self, arg):
         if DEBUG: print("JackShutdownCallback()")
         self.ShutdownCallback.emit()
@@ -1222,6 +1251,34 @@ class CatiaMainW(AbstractCanvasJackClass):
             pass
         else:
             self.canvas_renamePort(portIdCanvas, portShortName)
+
+    @pyqtSlot(jacklib.jack_uuid_t, str, int)
+    def slot_PropertyChangeCallback(self, uuid, key, change):
+        if key != URI_POSITION:
+            return
+
+        prop = jacklib.get_property(uuid, key)
+
+        if prop is None:
+          return
+
+        x1, y1, x2, y2 = tuple(int(v) for v in prop.value.split(":",4))
+
+        clientName = jacklib.get_client_name_by_uuid(gJack.client, jacklib.uuid_unparse(uuid))
+
+        if not clientName:
+            return
+
+        groupId = self.canvas_getGroupId(jacklib._d(clientName))
+
+        if groupId == -1:
+            return
+
+        if (x1 != 0 and x2 != 0) or (y1 != 0 and y2 != 0):
+            patchcanvas.splitGroup(groupId)
+        else:
+            patchcanvas.joinGroup(groupId)
+        patchcanvas.setGroupPosFull(groupId, x1, y1, x2, y2)
 
     @pyqtSlot()
     def slot_ShutdownCallback(self):

@@ -85,6 +85,7 @@ class AbstractCanvasJackClass(QMainWindow):
     PortRegistrationCallback = pyqtSignal(int, bool)
     PortConnectCallback = pyqtSignal(int, int, bool)
     PortRenameCallback = pyqtSignal(int, str, str)
+    PropertyChangeCallback = pyqtSignal(jacklib.jack_uuid_t, str, int)
     ShutdownCallback = pyqtSignal()
 
     SIGTERM = pyqtSignal()

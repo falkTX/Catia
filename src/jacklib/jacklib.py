@@ -79,6 +79,10 @@ JACK_LOAD_INIT_LIMIT = 1024
 JACK_DEFAULT_AUDIO_TYPE = "32 bit float mono audio"
 JACK_DEFAULT_MIDI_TYPE = "8 bit raw midi"
 
+JACK_UUID_SIZE = 36
+JACK_UUID_STRING_SIZE = JACK_UUID_SIZE + 1
+JACK_UUID_EMPTY_INITIALIZER = 0
+
 # Meta data
 _JACK_METADATA_PREFIX = "http://jackaudio.org/metadata/"
 JACK_METADATA_CONNECTED = _JACK_METADATA_PREFIX + "connected"
@@ -981,7 +985,7 @@ def port_connected_to(port, port_name):
 
 
 def port_get_connections(port):
-    ports =  jlib.jack_port_get_connections(port)
+    ports = jlib.jack_port_get_connections(port)
     if not ports:
         return
     for port_name in ports:
@@ -1496,6 +1500,12 @@ try:
 except AttributeError:
     jlib.jack_uuid_parse = None
 
+try:
+    jlib.jack_uuid_unparse.argtypes = [jack_uuid_t, c_char_p]
+    jlib.jack_uuid_unparse.restype = None
+except AttributeError:
+    jlib.jack_uuid_unparse = None
+
 
 def set_session_callback(client, session_callback, arg):
     if jlib.jack_set_session_callback:
@@ -1566,12 +1576,21 @@ def client_has_session_callback(client, client_name):
 
 
 def uuid_parse(uuid_cstr):
-    if jlib.jack_uuid_parse:
+    if jlib.jack_uuid_parse and uuid_cstr is not None:
         uuid = jack_uuid_t()
         res = jlib.jack_uuid_parse(uuid_cstr, byref(uuid))
         return uuid if res != -1 else None
 
     return -1
+
+
+def uuid_unparse(uuid, encoding=ENCODING):
+    if jlib.jack_uuid_unparse:
+        uuid_str = c_char_p(b" " * JACK_UUID_STRING_SIZE)
+        jlib.jack_uuid_unparse(uuid, uuid_str)
+        return _d(uuid_str.value, encoding)
+
+    return ""
 
 
 # -------------------------------------------------------------------------------------------------
