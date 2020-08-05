@@ -590,10 +590,11 @@ class CatiaMainW(AbstractCanvasJackClass):
             if jacklib.port_flags(portPtr) & jacklib.JackPortIsInput:
                 continue
 
-            portConnectionNames = c_char_p_p_to_list(jacklib.port_get_all_connections(gJack.client, portPtr))
+            portConnectionNames = tuple(jacklib.port_get_all_connections(gJack.client, portPtr))
 
-            for portConName in portConnectionNames:
-                self.canvas_connectPortsByName(portName, portConName)
+            if portConnectionNames:
+                for portConName in portConnectionNames:
+                    self.canvas_connectPortsByName(portName, portConName)
 
     def initAlsaPorts(self):
         if not (haveALSA and self.ui.act_settings_show_alsa.isChecked()):

@@ -27,7 +27,8 @@ from PyQt5.QtWidgets import QMainWindow, QMenu
 # Imports (Custom Stuff)
 
 from shared import *
-from jacklib_helpers import *
+from jacklib import jacklib
+from jacklib.jacklib_helpers import c_char_p_p_to_list, voidptr2str
 
 from patchcanvas import patchcanvas
 
