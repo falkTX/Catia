@@ -26,9 +26,10 @@ from PyQt5.QtWidgets import QMainWindow, QMenu
 # ------------------------------------------------------------------------------------------------------------
 # Imports (Custom Stuff)
 
-import patchcanvas
 from shared import *
 from jacklib_helpers import *
+
+from patchcanvas import patchcanvas
 
 # ------------------------------------------------------------------------------------------------------------
 # Have JACK2 ?

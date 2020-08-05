@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox
 
 import ui_settings_app
 from shared import *
-from patchcanvas_theme import *
+from patchcanvas.theme import *
 
 # ------------------------------------------------------------------------------------------------------------
 # Global variables

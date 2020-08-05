@@ -76,14 +76,17 @@ iGroupId   = 0
 iGroupName = 1
 iGroupType = 2
 
-iPortId    = 0
-iPortName  = 1
-iPortNameR = 2
-iPortGroupName = 3
+iPortId        = 0
+iPortName      = 1
+iPortNameR     = 2
+iPortGroupId   = 3
+iPortGroupName = 4
 
-iConnId     = 0
-iConnOutput = 1
-iConnInput  = 2
+iConnId       = 0
+iConnOutGroup = 1
+iConnOutPort  = 2
+iConnInGroup  = 3
+iConnInPort   = 4
 
 URI_CANVAS_ICON = "http://kxstudio.sf.net/ns/canvas/icon"
 
@@ -168,11 +171,13 @@ class CatiaMainW(AbstractCanvasJackClass):
             self.ui.graphicsView.setRenderHint(QPainter.HighQualityAntialiasing, self.fSavedSettings["Canvas/HighQualityAntialiasing"])
 
         pOptions = patchcanvas.options_t()
-        pOptions.theme_name       = self.fSavedSettings["Canvas/Theme"]
-        pOptions.auto_hide_groups = self.fSavedSettings["Canvas/AutoHideGroups"]
-        pOptions.use_bezier_lines = self.fSavedSettings["Canvas/UseBezierLines"]
-        pOptions.antialiasing     = self.fSavedSettings["Canvas/Antialiasing"]
-        pOptions.eyecandy         = self.fSavedSettings["Canvas/EyeCandy"]
+        pOptions.theme_name        = self.fSavedSettings["Canvas/Theme"]
+        pOptions.auto_hide_groups  = self.fSavedSettings["Canvas/AutoHideGroups"]
+        pOptions.use_bezier_lines  = self.fSavedSettings["Canvas/UseBezierLines"]
+        pOptions.antialiasing      = self.fSavedSettings["Canvas/Antialiasing"]
+        pOptions.eyecandy          = self.fSavedSettings["Canvas/EyeCandy"]
+        pOptions.auto_select_items = False # TODO
+        pOptions.inline_displays   = False
 
         pFeatures = patchcanvas.features_t()
         pFeatures.group_info   = False
@@ -303,6 +308,11 @@ class CatiaMainW(AbstractCanvasJackClass):
         elif action == patchcanvas.ACTION_GROUP_JOIN:
             groupId = value1
             patchcanvas.joinGroup(groupId)
+
+        elif action == patchcanvas.ACTION_GROUP_POSITION:
+            groupId = value1
+            x1, y1, x2, y2 = tuple(int(i) for i in valueStr.split(":"))
+            #host.patchbay_set_group_pos(gCarla.gui.fExternalPatchbay, groupId, x1, y1, x2, y2)
 
         elif action == patchcanvas.ACTION_PORT_INFO:
             portId = value1
@@ -444,56 +454,55 @@ class CatiaMainW(AbstractCanvasJackClass):
                 patchcanvas.renamePort(portId, portShortName)
 
         elif action == patchcanvas.ACTION_PORTS_CONNECT:
-            portIdA = value1
-            portIdB = value2
-            portRealNameA = ""
-            portRealNameB = ""
+            gOut, pOut, gIn, pIn = tuple(int(i) for i in valueStr.split(":"))
+
+            portRealNameOut = ""
+            portRealNameIn = ""
 
             for port in self.fPortList:
-                if port[iPortId] == portIdA:
-                    portRealNameA = port[iPortNameR]
-                if port[iPortId] == portIdB:
-                    portRealNameB = port[iPortNameR]
+                if port[iPortGroupId] == gOut and port[iPortId] == pOut:
+                    portRealNameOut = port[iPortNameR]
+                elif port[iPortGroupId] == gIn and port[iPortId] == pIn:
+                    portRealNameIn = port[iPortNameR]
 
-            if portRealNameA.startswith("[ALSA-"):
-                portIdAlsaA = portRealNameA.split(" ", 2)[1]
-                portIdAlsaB = portRealNameB.split(" ", 2)[1]
+            if portRealNameOut.startswith("[ALSA-"):
+                portRealNameOut = portRealNameOut.split(" ", 2)[1]
+                portRealNameIn = portRealNameIn.split(" ", 2)[1]
 
-                if os.system("aconnect %s %s" % (portIdAlsaA, portIdAlsaB)) == 0:
-                    self.canvas_connectPorts(portIdA, portIdB)
+                if os.system("aconnect %s %s" % (portRealNameOut, portRealNameIn)) == 0:
+                    self.canvas_connectPorts(gOut, pOut, gIn, pIn)
 
-            elif portRealNameA and portRealNameB:
-                jacklib.connect(gJack.client, portRealNameA, portRealNameB)
+            elif portRealNameOut and portRealNameIn:
+                jacklib.connect(gJack.client, portRealNameOut, portRealNameIn)
 
         elif action == patchcanvas.ACTION_PORTS_DISCONNECT:
             connectionId = value1
 
             for connection in self.fConnectionList:
                 if connection[iConnId] == connectionId:
-                    portIdA = connection[iConnOutput]
-                    portIdB = connection[iConnInput]
+                    gOut, pOut, gIn, pIn = connection[1:]
                     break
             else:
                 return
 
-            portRealNameA = ""
-            portRealNameB = ""
+            portRealNameOut = ""
+            portRealNameIn = ""
 
             for port in self.fPortList:
-                if port[iPortId] == portIdA:
-                    portRealNameA = port[iPortNameR]
-                if port[iPortId] == portIdB:
-                    portRealNameB = port[iPortNameR]
+                if port[iPortGroupId] == gOut and port[iPortId] == pOut:
+                    portRealNameOut = port[iPortNameR]
+                elif port[iPortGroupId] == gIn and port[iPortId] == pIn:
+                    portRealNameIn = port[iPortNameR]
 
-            if portRealNameA.startswith("[ALSA-"):
-                portIdAlsaA = portRealNameA.split(" ", 2)[1]
-                portIdAlsaB = portRealNameB.split(" ", 2)[1]
+            if portRealNameOut.startswith("[ALSA-"):
+                portRealNameOut = portRealNameOut.split(" ", 2)[1]
+                portRealNameIn = portRealNameIn.split(" ", 2)[1]
 
-                if os.system("aconnect -d %s %s" % (portIdAlsaA, portIdAlsaB)) == 0:
-                    self.canvas_disconnectPorts(portIdA, portIdB)
+                if os.system("aconnect -d %s %s" % (portRealNameOut, portRealNameIn)) == 0:
+                    self.canvas_disconnectPorts(gOut, pOut, gIn, pIn)
 
-            elif portRealNameA and portRealNameB:
-                jacklib.disconnect(gJack.client, portRealNameA, portRealNameB)
+            elif portRealNameOut and portRealNameIn:
+                jacklib.disconnect(gJack.client, portRealNameOut, portRealNameIn)
 
     def initPorts(self):
         self.fGroupList      = []
@@ -792,10 +801,11 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         patchcanvas.addPort(groupId, portId, portName, portMode, portType)
 
-        portObj = [None, None, None, None]
-        portObj[iPortId]    = portId
-        portObj[iPortName]  = portName
-        portObj[iPortNameR] = "[ALSA-%s] %s" % ("Input" if isPortInput else "Output", portNameR)
+        portObj = [None, None, None, None, None]
+        portObj[iPortId]        = portId
+        portObj[iPortName]      = portName
+        portObj[iPortNameR]     = "[ALSA-%s] %s" % ("Input" if isPortInput else "Output", portNameR)
+        portObj[iPortGroupId]   = groupId
         portObj[iPortGroupName] = groupName
 
         self.fPortList.append(portObj)
@@ -830,7 +840,7 @@ class CatiaMainW(AbstractCanvasJackClass):
             portMode = patchcanvas.PORT_MODE_NULL
 
         if groupName == gA2JClientName:
-            portType  = patchcanvas.PORT_TYPE_MIDI_A2J
+            portType  = patchcanvas.PORT_TYPE_MIDI_JACK
             groupName = portName.replace("%s:" % gA2JClientName, "", 1).split(" [", 1)[0]
             portShortName = portName.split("): ", 1)[1]
 
@@ -855,10 +865,11 @@ class CatiaMainW(AbstractCanvasJackClass):
 
         patchcanvas.addPort(groupId, portId, portShortName, portMode, portType)
 
-        portObj = [None, None, None, None]
-        portObj[iPortId]    = portId
-        portObj[iPortName]  = portName
-        portObj[iPortNameR] = portNameR
+        portObj = [None, None, None, None, None]
+        portObj[iPortId]        = portId
+        portObj[iPortName]      = portName
+        portObj[iPortNameR]     = portNameR
+        portObj[iPortGroupId]   = groupId
         portObj[iPortGroupName] = groupName
 
         self.fPortList.append(portObj)
@@ -892,14 +903,16 @@ class CatiaMainW(AbstractCanvasJackClass):
     def canvas_renamePort(self, portId, portShortName):
         patchcanvas.renamePort(portId, portShortName)
 
-    def canvas_connectPorts(self, portOutId, portInId):
+    def canvas_connectPorts(self, outGroupId, outPortId, inGroupId, inPortId):
         connectionId = self.fLastConnectionId
-        patchcanvas.connectPorts(connectionId, portOutId, portInId)
+        patchcanvas.connectPorts(connectionId, outGroupId, outPortId, inGroupId, inPortId)
 
-        connObj = [None, None, None]
-        connObj[iConnId]     = connectionId
-        connObj[iConnOutput] = portOutId
-        connObj[iConnInput]  = portInId
+        connObj = [None, None, None, None, None]
+        connObj[iConnId]       = connectionId
+        connObj[iConnOutGroup] = outGroupId
+        connObj[iConnOutPort]  = outPortId
+        connObj[iConnInGroup]  = inGroupId
+        connObj[iConnInPort]   = inPortId
 
         self.fConnectionList.append(connObj)
         self.fLastConnectionId += 1
@@ -907,46 +920,58 @@ class CatiaMainW(AbstractCanvasJackClass):
         return connectionId
 
     def canvas_connectPortsByName(self, portOutName, portInName):
-        portOutId = -1
-        portInId  = -1
+        outGroupId = outPortId = inGroupId = inPortId = -1
 
         for port in self.fPortList:
             if port[iPortNameR] == portOutName:
-                portOutId = port[iPortId]
+                outPortId = port[iPortId]
+                outGroupId = port[iPortGroupId]
             elif port[iPortNameR] == portInName:
-                portInId = port[iPortId]
+                inPortId = port[iPortId]
+                inGroupId = port[iPortGroupId]
 
-            if portOutId >= 0 and portInId >= 0:
+            if outPortId >= 0 and inPortId >= 0:
                 break
 
         else:
             print("Catia - connect jack ports failed")
             return -1
 
-        return self.canvas_connectPorts(portOutId, portInId)
+        return self.canvas_connectPorts(outGroupId, outPortId, inGroupId, inPortId)
 
-    def canvas_disconnectPorts(self, portOutId, portInId):
+    def canvas_disconnectPorts(self, outGroupId, outPortId, inGroupId, inPortId):
         for connection in self.fConnectionList:
-            if connection[iConnOutput] == portOutId and connection[iConnInput] == portInId:
-                patchcanvas.disconnectPorts(connection[iConnId])
-                self.fConnectionList.remove(connection)
-                break
+            if connection[iConnOutGroup] != outGroupId:
+                continue
+            if connection[iConnOutPort] != outPortId:
+                continue
+            if connection[iConnInGroup] != inGroupId:
+                continue
+            if connection[iConnInPort] != inPortId:
+                continue
+            patchcanvas.disconnectPorts(connection[iConnId])
+            self.fConnectionList.remove(connection)
+            break
 
     def canvas_disconnectPortsByName(self, portOutName, portInName):
-        portOutId = -1
-        portInId  = -1
+        outGroupId = outPortId = inGroupId = inPortId = -1
 
         for port in self.fPortList:
             if port[iPortNameR] == portOutName:
-                portOutId = port[iPortId]
+                outPortId = port[iPortId]
+                outGroupId = port[iPortGroupId]
             elif port[iPortNameR] == portInName:
-                portInId = port[iPortId]
+                inPortId = port[iPortId]
+                inGroupId = port[iPortGroupId]
 
-        if portOutId == -1 or portInId == -1:
+            if outPortId >= 0 and inPortId >= 0:
+                break
+
+        else:
             print("Catia - disconnect ports failed")
             return
 
-        self.canvas_disconnectPorts(portOutId, portInId)
+        self.canvas_disconnectPorts(outGroupId, outPortId, inGroupId, inPortId)
 
     def jackStarted(self):
         if not gJack.client:
@@ -1248,11 +1273,13 @@ class CatiaMainW(AbstractCanvasJackClass):
             patchcanvas.clear()
 
             pOptions = patchcanvas.options_t()
-            pOptions.theme_name       = self.fSavedSettings["Canvas/Theme"]
-            pOptions.auto_hide_groups = self.fSavedSettings["Canvas/AutoHideGroups"]
-            pOptions.use_bezier_lines = self.fSavedSettings["Canvas/UseBezierLines"]
-            pOptions.antialiasing     = self.fSavedSettings["Canvas/Antialiasing"]
-            pOptions.eyecandy         = self.fSavedSettings["Canvas/EyeCandy"]
+            pOptions.theme_name        = self.fSavedSettings["Canvas/Theme"]
+            pOptions.auto_hide_groups  = self.fSavedSettings["Canvas/AutoHideGroups"]
+            pOptions.use_bezier_lines  = self.fSavedSettings["Canvas/UseBezierLines"]
+            pOptions.antialiasing      = self.fSavedSettings["Canvas/Antialiasing"]
+            pOptions.eyecandy          = self.fSavedSettings["Canvas/EyeCandy"]
+            pOptions.auto_select_items = False # TODO
+            pOptions.inline_displays   = False
 
             pFeatures = patchcanvas.features_t()
             pFeatures.group_info   = False
